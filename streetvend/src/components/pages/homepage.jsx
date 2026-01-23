@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import {
   FaUtensils,
   FaMapMarkerAlt,
@@ -24,6 +25,7 @@ import {
 import DeliveryTrackingCard from './DeliveryTrackingCard';
 
 const HomePage = () => {
+  const { isAuthenticated, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('vendor');
   const [isVisible, setIsVisible] = useState(false);
   const [showDeliveryTracking, setShowDeliveryTracking] = useState(false);
@@ -72,18 +74,32 @@ const HomePage = () => {
               ))}
             </div>
             <div className="flex gap-3">
-  <Link to="/login">
-    <button className="px-6 py-2.5 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium">
-      Login
-    </button>
-  </Link>
+              {isAuthenticated ? (
+                <button
+                  onClick={() => {
+                    logout();
+                    alert('Logged out successfully!');
+                  }}
+                  className="px-6 py-2.5 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium"
+                >
+                  Sign Out
+                </button>
+              ) : (
+                <>
+                  <Link to="/login">
+                    <button className="px-6 py-2.5 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium">
+                      Login
+                    </button>
+                  </Link>
 
-  <Link to="/signup">
-    <button className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium">
-      Sign Up
-    </button>
-  </Link>
-</div>
+                  <Link to="/signup">
+                    <button className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium">
+                      Sign Up
+                    </button>
+                  </Link>
+                </>
+              )}
+            </div>
 
           </nav>
         </div>
@@ -137,7 +153,7 @@ const HomePage = () => {
                   alt="Street Food"
                   className="rounded-2xl w-full h-auto shadow-2xl border border-orange-100"
                 />
-               
+
                 {/* Badge Top Left */}
                 <div
                   className="absolute -top-6 -left-6 bg-gradient-to-r from-orange-500 to-orange-600 p-4 rounded-full shadow-xl cursor-pointer border-2 border-red-600 bg-red-200 bg-opacity-30"
@@ -302,44 +318,44 @@ const HomePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
               {activeTab === 'vendor' ? (
                 <>
-  <DashboardCard
-    icon={<FaMapMarkerAlt className="text-orange-500 text-xl" />}
-    title="Nearby Suppliers"
-    description="Interactive map showing verified suppliers in your area with distance and ratings."
-  />
-  <DashboardCard
-    icon={<FaShoppingCart className="text-orange-500 text-xl" />}
-    title="Order Management"
-    description="View current, past, and upcoming orders with detailed status tracking."
-  />
-  <DashboardCard
-    icon={<FaChartLine className="text-orange-500 text-xl" />}
-    title="Price Comparison"
-    description="Compare prices for ingredients across suppliers with historical trends."
-  />
-  <DashboardCard
-    icon={<FaTruck className="text-orange-500 text-xl" />}
-    title="Delivery Tracking"
-    description="Real-time tracking of your orders with live location updates."
-  />
+                  <DashboardCard
+                    icon={<FaMapMarkerAlt className="text-orange-500 text-xl" />}
+                    title="Nearby Suppliers"
+                    description="Interactive map showing verified suppliers in your area with distance and ratings."
+                  />
+                  <DashboardCard
+                    icon={<FaShoppingCart className="text-orange-500 text-xl" />}
+                    title="Order Management"
+                    description="View current, past, and upcoming orders with detailed status tracking."
+                  />
+                  <DashboardCard
+                    icon={<FaChartLine className="text-orange-500 text-xl" />}
+                    title="Price Comparison"
+                    description="Compare prices for ingredients across suppliers with historical trends."
+                  />
+                  <DashboardCard
+                    icon={<FaTruck className="text-orange-500 text-xl" />}
+                    title="Delivery Tracking"
+                    description="Real-time tracking of your orders with live location updates."
+                  />
 
-  {/* Visual Dashboard Preview Area */}
-  <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 p-6">
-    <div className="text-center">
-      <div className="flex justify-center items-center min-h-64">
-        <img
-          src="public/images/dash.png"
-          alt="Vendor Dashboard Preview"
-          className="rounded-xl shadow-md max-h-64 w-auto object-contain"
-        />
-      </div>
-      <h3 className="text-2xl font-bold text-gray-800 mt-4 mb-2">Interactive Dashboard Preview</h3>
-      <p className="text-gray-600 font-medium">Experience the full power of our {activeTab} dashboard</p>
-    </div>
-  </div>
-</>
+                  {/* Visual Dashboard Preview Area */}
+                  <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 p-6">
+                    <div className="text-center">
+                      <div className="flex justify-center items-center min-h-64">
+                        <img
+                          src="public/images/dash.png"
+                          alt="Vendor Dashboard Preview"
+                          className="rounded-xl shadow-md max-h-64 w-auto object-contain"
+                        />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-800 mt-4 mb-2">Interactive Dashboard Preview</h3>
+                      <p className="text-gray-600 font-medium">Experience the full power of our {activeTab} dashboard</p>
+                    </div>
+                  </div>
+                </>
 
-                
+
               ) : (
                 <>
                   <DashboardCard
@@ -362,23 +378,23 @@ const HomePage = () => {
                     title="Vendor Management"
                     description="Manage relationships with vendors and track their order history."
                   />
-                   {/* Visual Dashboard Preview Area */}
-           <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 flex items-center justify-center p-6">
-  <div className="text-center">
-    <img
-      src="/images/sup.png"
-      alt="Vendor Dashboard Preview"
-      className="mx-auto rounded-xl shadow-md max-h-64 w-auto object-contain"
-    />
-    <h3 className="text-2xl font-bold text-gray-800 mt-4 mb-2">Interactive Dashboard Preview</h3>
-    <p className="text-gray-600 font-medium">Experience the full power of our {activeTab} dashboard</p>
-  </div>
-</div>
+                  {/* Visual Dashboard Preview Area */}
+                  <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 flex items-center justify-center p-6">
+                    <div className="text-center">
+                      <img
+                        src="/images/sup.png"
+                        alt="Vendor Dashboard Preview"
+                        className="mx-auto rounded-xl shadow-md max-h-64 w-auto object-contain"
+                      />
+                      <h3 className="text-2xl font-bold text-gray-800 mt-4 mb-2">Interactive Dashboard Preview</h3>
+                      <p className="text-gray-600 font-medium">Experience the full power of our {activeTab} dashboard</p>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
 
-           
+
 
 
           </div>

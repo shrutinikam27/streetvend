@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -18,16 +19,37 @@ const Signup = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
       alert('Passwords do not match');
       return;
     }
-    // For now, just redirect to login after any signup attempt
-    // In a real app, you'd validate and create the account here
-    navigate('/login');
+    try {
+      const response = await fetch('http://localhost:5007/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          userType: formData.userType
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert('Account created successfully!');
+        navigate('/login');
+      } else {
+        alert(data.message || 'Signup failed');
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+      alert('An error occurred during signup');
+    }
   };
 
   return (

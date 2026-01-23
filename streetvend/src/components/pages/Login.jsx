@@ -1,18 +1,36 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Link } from "react-router-dom";
-
+import { useAuth } from '../../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // For now, just redirect to homepage after any login attempt
-    // In a real app, you'd validate credentials here
-    navigate('/');
+    try {
+      const response = await fetch('http://localhost:5007/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        login(data.token, data.user);
+        alert('Login successful!');
+        navigate('/');
+      } else {
+        alert(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login');
+    }
   };
 
   return (
@@ -96,19 +114,19 @@ const Login = () => {
             </button>
           </div>
 
-         <div className="text-center">
-  <p className="text-sm text-gray-600">
-    Don't have an account?{" "}
-    <Link
-      to="/signup"
-      className="font-medium text-orange-600 hover:text-orange-500"
-    >
-      Sign up here
-    </Link>
-  </p>
-</div>
+          <div className="text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{" "}
+              <Link
+                to="/signup"
+                className="font-medium text-orange-600 hover:text-orange-500"
+              >
+                Sign up here
+              </Link>
+            </p>
+          </div>
 
-  
+
         </form>
       </div>
     </div>
