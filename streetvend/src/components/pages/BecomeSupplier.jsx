@@ -90,11 +90,7 @@ const BecomeSupplier = () => {
                         Become a Verified Supplier
                     </h1>
                     <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-<<<<<<< HEAD
                         Join StreetVend to expand your customer base and grow your business with Satara's largest street food vendor network
-=======
-                        Join Vendorverse to expand your customer base and grow your business with India's largest street food vendor network
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
                     </p>
                 </div>
 
@@ -162,7 +158,6 @@ const BecomeSupplier = () => {
 
                             <div className="mb-6">
                                 <label className="block text-gray-700 mb-2">City</label>
-<<<<<<< HEAD
                                 <select name="city" value={formData.city} onChange={handleChange} className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-orange-500 outline-none" required>
                                     <option value="">Select City</option>
                                     <option value="satara">Satara City</option>
@@ -174,16 +169,6 @@ const BecomeSupplier = () => {
                                     <option value="shirwal">Shirwal</option>
                                     <option value="mahabaleshwar">Mahabaleshwar</option>
                                     <option value="panchgani">Panchgani</option>
-=======
-                                <select name="city" value={formData.city} onChange={handleChange} className="w-full px-4 py-3 border rounded-lg" required>
-                                    <option value="">Select City</option>
-                                    <option value="mumbai">Mumbai</option>
-                                    <option value="delhi">Delhi</option>
-                                    <option value="bangalore">Bangalore</option>
-                                    <option value="chennai">Chennai</option>
-                                    <option value="kolkata">Kolkata</option>
-                                    <option value="hyderabad">Hyderabad</option>
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
                                 </select>
                             </div>
 

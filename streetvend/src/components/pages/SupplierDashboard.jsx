@@ -16,10 +16,9 @@ const SupplierDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-<<<<<<< HEAD
-                const ordersRes = await fetch('http://127.0.0.1:5007/orders');
+                const ordersRes = await fetch('http://localhost:5007/orders');
                 const ordersData = await ordersRes.json();
-                const productsRes = await fetch('http://127.0.0.1:5007/products');
+                const productsRes = await fetch('http://localhost:5007/products');
                 const productsData = await productsRes.json();
 
                 const orders = ordersData.orders || [
@@ -33,15 +32,6 @@ const SupplierDashboard = () => {
                     { id: 3, name: 'Cooking Oil (1L)', category: 'Oils', stock: 80, price: 150 },
                     { id: 4, name: 'Wheat Flour (5kg)', category: 'Flours', stock: 60, price: 250 }
                 ];
-=======
-                const ordersRes = await fetch('http://localhost:3000/orders');
-                const ordersData = await ordersRes.json();
-                const productsRes = await fetch('http://localhost:3000');
-                const productsData = await productsRes.json();
-
-                const orders = ordersData.orders;
-                const products = productsData.items;
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
 
                 // Calculate stats
                 const totalOrders = orders.length;
@@ -59,7 +49,6 @@ const SupplierDashboard = () => {
                 });
             } catch (error) {
                 console.error('Error fetching data:', error);
-<<<<<<< HEAD
                 // Fallback to mock data
                 const mockOrders = [
                     { id: '501', vendor: 'Mumbai Chaat', items: 'Potatoes (50kg)', amount: 2500, status: 'pending', date: '2023-10-25' },
@@ -71,8 +60,6 @@ const SupplierDashboard = () => {
                     { id: 2, name: 'Onions (1kg)', category: 'Vegetables', stock: 200, price: 60 }
                 ]);
                 setStats({ totalOrders: 2, pendingOrders: 1, completedOrders: 1, revenue: 1200 });
-=======
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
             }
         };
         fetchData();
@@ -89,11 +76,7 @@ const SupplierDashboard = () => {
                         </div>
                         <div>
                             <h1 className="font-bold text-xl">Supplier Dashboard</h1>
-<<<<<<< HEAD
-                            <p className="text-orange-200 text-sm">Satara Agro Products Ltd.</p>
-=======
-                            <p className="text-orange-200 text-sm">Agro Products Ltd.</p>
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
+                             <p className="text-orange-200 text-sm">Satara Agro Products Ltd.</p>
                         </div>
                     </div>
                 </div>
@@ -175,15 +158,9 @@ const SupplierDashboard = () => {
 
                         <div className="flex items-center gap-2">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
-<<<<<<< HEAD
-                                <span className="text-white font-bold">SV</span>
+                                 <span className="text-white font-bold">SV</span>
                             </div>
                             <span className="font-medium">Satara Supplier</span>
-=======
-                                <span className="text-white font-bold">SP</span>
-                            </div>
-                            <span className="font-medium">Supplier Profile</span>
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
                             <FaChevronDown className="text-gray-500" />
                         </div>
                     </div>
