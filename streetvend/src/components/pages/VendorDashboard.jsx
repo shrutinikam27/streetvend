@@ -21,6 +21,7 @@ const VendorDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+<<<<<<< HEAD
                 const ordersRes = await fetch('http://127.0.0.1:5007/orders');
                 const ordersData = await ordersRes.json();
                 const inventoryRes = await fetch('http://127.0.0.1:5007/inventory');
@@ -37,6 +38,15 @@ const VendorDashboard = () => {
                     { id: 3, name: 'Cooking Oil', stock: 3, unit: 'liters', alert: true },
                     { id: 4, name: 'Paneer', stock: 2, unit: 'kg', alert: true }
                 ];
+=======
+                const ordersRes = await fetch('http://localhost:3000/orders');
+                const ordersData = await ordersRes.json();
+                const inventoryRes = await fetch('http://localhost:3000/inventory');
+                const inventoryData = await inventoryRes.json();
+
+                const orders = ordersData.orders;
+                const inventory = inventoryData.inventory;
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
 
                 // Calculate stats
                 const dailySales = orders.reduce((sum, order) => order.status === 'delivered' ? sum + order.amount : sum, 0);
@@ -53,6 +63,7 @@ const VendorDashboard = () => {
                 });
             } catch (error) {
                 console.error('Error fetching data:', error);
+<<<<<<< HEAD
                 // Fallback to mock data on error
                 const mockOrders = [
                     { id: '101', customer: 'Rahul Sharma', items: 'Vada Pav (50)', amount: 1500, status: 'delivered', time: '10:30 AM' },
@@ -65,6 +76,8 @@ const VendorDashboard = () => {
                 setOrders(mockOrders);
                 setInventory(mockInventory);
                 setStats({ dailySales: 1500, pendingOrders: 1, stockAlerts: 2, customerRating: 4.7 });
+=======
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
             }
         };
         fetchData();
@@ -88,8 +101,13 @@ const VendorDashboard = () => {
                             <div className="bg-gray-200 border-2 border-dashed rounded-xl w-10 h-10" />
                         </div>
                         <div>
+<<<<<<< HEAD
                             <h1 className="font-bold text-xl">Satara Food Street</h1>
                             <p className="text-orange-200 text-sm">Satara, Maharashtra</p>
+=======
+                            <h1 className="font-bold text-xl">Street Food Vendor</h1>
+                            <p className="text-orange-200 text-sm">Mumbai, India</p>
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
                         </div>
                     </div>
                 </div>
@@ -176,9 +194,15 @@ const VendorDashboard = () => {
 
                                 <div className="flex items-center">
                                     <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
+<<<<<<< HEAD
                                         <span className="text-white font-bold text-xs">SV</span>
                                     </div>
                                     <span className="ml-2 hidden sm:inline text-gray-700">Satara Vendor</span>
+=======
+                                        <span className="text-white font-bold text-xs">VS</span>
+                                    </div>
+                                    <span className="ml-2 hidden sm:inline text-gray-700">Vendor Profile</span>
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
                                 </div>
                             </div>
                         </div>

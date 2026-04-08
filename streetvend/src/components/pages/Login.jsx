@@ -12,7 +12,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+<<<<<<< HEAD
       const response = await fetch('http://127.0.0.1:5007/api/auth/login', {
+=======
+      const response = await fetch('http://localhost:5007/api/auth/login', {
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

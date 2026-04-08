@@ -27,7 +27,11 @@ const Signup = () => {
       return;
     }
     try {
+<<<<<<< HEAD
       const response = await fetch('http://127.0.0.1:5007/api/auth/register', {
+=======
+      const response = await fetch('http://localhost:5007/api/auth/register', {
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -48,7 +52,11 @@ const Signup = () => {
       }
     } catch (error) {
       console.error('Signup error:', error);
+<<<<<<< HEAD
       alert(`An error occurred during signup: ${error.message}`);
+=======
+      alert('An error occurred during signup');
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
     }
   };
 
@@ -162,6 +170,7 @@ const Signup = () => {
                 />
                 <span className="ml-2 text-sm text-gray-700">Supplier</span>
               </label>
+<<<<<<< HEAD
               <label className="flex items-center">
                 <input
                   type="radio"
@@ -173,6 +182,8 @@ const Signup = () => {
                 />
                 <span className="ml-2 text-sm text-gray-700">Admin</span>
               </label>
+=======
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
             </div>
           </div>
 

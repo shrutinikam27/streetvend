@@ -15,6 +15,7 @@ router.post('/register', [
     body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
     body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+<<<<<<< HEAD
     body('userType').isIn(['vendor', 'supplier', 'admin']).withMessage('Invalid user type')
 ], async (req, res) => {
     console.log('Registration attempt:', req.body);
@@ -22,6 +23,13 @@ router.post('/register', [
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             console.log('Validation errors:', errors.array());
+=======
+    body('userType').isIn(['vendor', 'supplier']).withMessage('Invalid user type')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
             return res.status(400).json({ errors: errors.array() });
         }
 
@@ -86,8 +94,13 @@ router.post('/register', [
             }
         });
     } catch (error) {
+<<<<<<< HEAD
         console.error('Registration error details:', error);
         res.status(500).json({ message: 'Server error', details: error.message });
+=======
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
     }
 });
 
@@ -147,6 +160,7 @@ router.post('/login', [
     }
 });
 
+<<<<<<< HEAD
 // @route   GET api/auth/suppliers
 // @desc    Get all suppliers
 // @access  Public
@@ -160,4 +174,6 @@ router.get('/suppliers', async (req, res) => {
     }
 });
 
+=======
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
 module.exports = router;

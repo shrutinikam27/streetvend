@@ -25,7 +25,11 @@ import {
 import DeliveryTrackingCard from './DeliveryTrackingCard';
 
 const HomePage = () => {
+<<<<<<< HEAD
   const { isAuthenticated, user, logout } = useAuth();
+=======
+  const { isAuthenticated, logout } = useAuth();
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
   const [activeTab, setActiveTab] = useState('vendor');
   const [isVisible, setIsVisible] = useState(false);
   const [showDeliveryTracking, setShowDeliveryTracking] = useState(false);
@@ -59,7 +63,11 @@ const HomePage = () => {
               <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center shadow-lg">
                 <FaUtensils className="text-white text-xl" />
               </div>
+<<<<<<< HEAD
               <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">StreetVend</span>
+=======
+              <span className="text-2xl font-bold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">Vendorverse</span>
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
             </div>
             <div className="hidden md:flex gap-8">
               {['Features', 'How It Works', 'Dashboard', 'Testimonials'].map((item) => (
@@ -75,6 +83,7 @@ const HomePage = () => {
             </div>
             <div className="flex gap-3">
               {isAuthenticated ? (
+<<<<<<< HEAD
                 <div className="flex gap-3">
                   {user && user.userType === 'admin' && (
                     <Link to="/admin-dashboard">
@@ -93,6 +102,17 @@ const HomePage = () => {
                     Sign Out
                   </button>
                 </div>
+=======
+                <button
+                  onClick={() => {
+                    logout();
+                    alert('Logged out successfully!');
+                  }}
+                  className="px-6 py-2.5 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium"
+                >
+                  Sign Out
+                </button>
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
               ) : (
                 <>
                   <Link to="/login">
@@ -319,6 +339,7 @@ const HomePage = () => {
               >
                 Supplier Dashboard
               </button>
+<<<<<<< HEAD
 
               <button
                 className={`px-8 py-4 rounded-xl transition-all duration-300 font-medium ${activeTab === 'tracking'
@@ -329,6 +350,8 @@ const HomePage = () => {
               >
                 Live Tracking
               </button>
+=======
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
             </div>
           </div>
 
@@ -359,6 +382,7 @@ const HomePage = () => {
                   />
 
                   {/* Visual Dashboard Preview Area */}
+<<<<<<< HEAD
                   <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 p-6 md:col-span-2">
                     <div className="text-center">
                       <div className="flex justify-center items-center min-h-64">
@@ -379,6 +403,30 @@ const HomePage = () => {
                     icon={<FaShoppingCart className="text-orange-500 text-xl" />}
                     title="Sales Analytics"
                     description="View performance metrics, total sales, and growth trends at a glance."
+=======
+                  <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 p-6">
+                    <div className="text-center">
+                      <div className="flex justify-center items-center min-h-64">
+                        <img
+                          src="public/images/dash.png"
+                          alt="Vendor Dashboard Preview"
+                          className="rounded-xl shadow-md max-h-64 w-auto object-contain"
+                        />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-800 mt-4 mb-2">Interactive Dashboard Preview</h3>
+                      <p className="text-gray-600 font-medium">Experience the full power of our {activeTab} dashboard</p>
+                    </div>
+                  </div>
+                </>
+
+
+              ) : (
+                <>
+                  <DashboardCard
+                    icon={<FaShoppingCart className="text-orange-500 text-xl" />}
+                    title="Order Management"
+                    description="View and manage all incoming orders with automated processing tools."
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
                   />
                   <DashboardCard
                     icon={<FaClipboardList className="text-orange-500 text-xl" />}
@@ -387,6 +435,7 @@ const HomePage = () => {
                   />
                   <DashboardCard
                     icon={<FaChartLine className="text-orange-500 text-xl" />}
+<<<<<<< HEAD
                     title="Revenue Tracking"
                     description="Detailed analytics on profit margins and top-performing products."
                   />
@@ -440,11 +489,32 @@ const HomePage = () => {
                       />
                       <h3 className="text-2xl font-bold text-gray-800 mt-6 mb-2">Hyper-Local GPS Tracking</h3>
                       <p className="text-gray-600 font-medium max-w-lg mx-auto">Never lose sight of an order again with our state-of-the-art live monitoring system.</p>
+=======
+                    title="Sales Analytics"
+                    description="Detailed analytics on sales performance with profit margin insights."
+                  />
+                  <DashboardCard
+                    icon={<FaUsers className="text-orange-500 text-xl" />}
+                    title="Vendor Management"
+                    description="Manage relationships with vendors and track their order history."
+                  />
+                  {/* Visual Dashboard Preview Area */}
+                  <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 flex items-center justify-center p-6">
+                    <div className="text-center">
+                      <img
+                        src="/images/sup.png"
+                        alt="Vendor Dashboard Preview"
+                        className="mx-auto rounded-xl shadow-md max-h-64 w-auto object-contain"
+                      />
+                      <h3 className="text-2xl font-bold text-gray-800 mt-4 mb-2">Interactive Dashboard Preview</h3>
+                      <p className="text-gray-600 font-medium">Experience the full power of our {activeTab} dashboard</p>
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
                     </div>
                   </div>
                 </>
               )}
             </div>
+<<<<<<< HEAD
           </div>
         </div>
       </section>
@@ -452,6 +522,18 @@ const HomePage = () => {
 
       {/* Testimonials */}
       <section id="testimonials" className="py-20 md:py-28 bg-gradient-to-r from-gray-900 to-gray-800 text-white relative overflow-hidden" >
+=======
+
+
+
+
+          </div>
+        </div>
+      </section >
+
+      {/* Testimonials */}
+      < section id="testimonials" className="py-20 md:py-28 bg-gradient-to-r from-gray-900 to-gray-800 text-white relative overflow-hidden" >
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
         <div className="absolute inset-0 bg-gradient-to-r from-orange-900/20 to-orange-800/20"></div>
         <div className="relative z-10 container mx-auto px-4">
           <SectionTitle
@@ -485,7 +567,11 @@ const HomePage = () => {
       </section >
 
       {/* CTA Section */}
+<<<<<<< HEAD
       <section className="py-20 md:py-28 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-white relative overflow-hidden" >
+=======
+      < section className="py-20 md:py-28 bg-gradient-to-r from-orange-500 via-orange-600 to-orange-500 text-white relative overflow-hidden" >
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
         <div className="absolute inset-0 opacity-30">
           <div className="w-full h-full bg-white bg-opacity-5" style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.1'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
@@ -494,6 +580,7 @@ const HomePage = () => {
         <div className="relative z-10 container mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-5xl font-bold mb-6">Ready to Transform Your Sourcing?</h2>
           <p className="text-orange-100 max-w-3xl mx-auto mb-12 text-xl leading-relaxed">
+<<<<<<< HEAD
             Join thousands of vendors and suppliers who are saving time and money with StreetVend
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-6">
@@ -507,6 +594,15 @@ const HomePage = () => {
               onClick={() => window.location.href='/signup'}
               className="px-10 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-orange-500 transition-all duration-300 font-medium text-lg transform hover:scale-105"
             >
+=======
+            Join thousands of vendors and suppliers who are saving time and money with Vendorverse
+          </p>
+          <div className="flex flex-col sm:flex-row justify-center gap-6">
+            <button className="px-10 py-4 bg-white text-orange-500 rounded-lg hover:bg-gray-100 transition-all duration-300 font-medium text-lg transform hover:scale-105 shadow-xl">
+              Sign Up as Vendor
+            </button>
+            <button className="px-10 py-4 border-2 border-white text-white rounded-lg hover:bg-white hover:text-orange-500 transition-all duration-300 font-medium text-lg transform hover:scale-105">
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
               Register as Supplier
             </button>
           </div>
@@ -514,6 +610,7 @@ const HomePage = () => {
       </section >
 
       {/* Footer - Horizontal 4-Column Layout */}
+<<<<<<< HEAD
       <footer className="bg-gray-900 border-t border-orange-500/30 pt-20 pb-10">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
@@ -596,6 +693,71 @@ const HomePage = () => {
           </div>
         </div>
       </footer>
+=======
+      < footer className="bg-gray-900 text-gray-300 pt-20 pb-8" >
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
+            {/* Company Info */}
+            <div className="lg:col-span-1">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center shadow-lg">
+                  <FaUtensils className="text-white text-xl" />
+                </div>
+                <span className="text-2xl font-bold text-white">Vendorverse</span>
+              </div>
+              <p className="mb-6 max-w-sm leading-relaxed">
+                Empowering India's street food vendors with efficient sourcing solutions since 2023.
+              </p>
+              <div className="flex gap-4">
+                <a
+                  href="#"
+                  className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-gradient-to-r hover:from-orange-500 hover:to-orange-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                >
+                  <FaFacebookF />
+                </a>
+                <a
+                  href="#"
+                  className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-gradient-to-r hover:from-orange-500 hover:to-orange-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                >
+                  <FaTwitter />
+                </a>
+                <a
+                  href="#"
+                  className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-gradient-to-r hover:from-orange-500 hover:to-orange-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                >
+                  <FaInstagram />
+                </a>
+                <a
+                  href="#"
+                  className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center text-gray-300 hover:bg-gradient-to-r hover:from-orange-500 hover:to-orange-600 hover:text-white transition-all duration-300 transform hover:scale-110"
+                >
+                  <FaLinkedinIn />
+                </a>
+              </div>
+            </div>
+
+            <FooterColumn
+              title="For Vendors"
+              items={['Find Suppliers', 'Place Orders', 'Group Buying', 'Delivery Tracking', 'Vendor Resources']}
+            />
+
+            <FooterColumn
+              title="For Suppliers"
+              items={['Register as Supplier', 'Manage Products', 'Order Management', 'Payment Solutions', 'Supplier Resources']}
+            />
+
+            <FooterColumn
+              title="Company"
+              items={['About Us', 'Careers', 'Contact Us', 'FAQs', 'Privacy Policy']}
+            />
+          </div>
+
+          <div className="pt-8 border-t border-gray-800 text-center">
+            <p className="text-gray-400">&copy; 2023 Vendorverse. All rights reserved. Designed with ❤️ for India's street food vendors.</p>
+          </div>
+        </div>
+      </footer >
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
     </div >
   );
 };

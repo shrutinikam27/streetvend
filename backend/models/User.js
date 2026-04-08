@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
     userType: {
         type: String,
         required: true,
+<<<<<<< HEAD
         enum: ['vendor', 'supplier', 'admin']
     },
     // Supplier specific fields
@@ -54,6 +55,9 @@ const userSchema = new mongoose.Schema({
     profileImage: {
         type: String,
         default: 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+=======
+        enum: ['vendor', 'supplier']
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
     },
     createdAt: {
         type: Date,

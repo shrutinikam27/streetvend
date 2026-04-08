@@ -11,8 +11,11 @@ import BecomeSupplier from "./components/pages/BecomeSupplier";
 import VendorDashboard from "./components/pages/VendorDashboard";
 import SupplierDashboard from "./components/pages/SupplierDashboard";
 import CreateOrder from "./components/pages/CreateOrder";
+<<<<<<< HEAD
 import AdminDashboard from "./components/pages/AdminDashboard";
 import LiveChat from "./components/common/LiveChat";
+=======
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
 
 const ProtectedRoute = ({ children, allowedUserTypes }) => {
   const { isAuthenticated, user } = useAuth();
@@ -41,12 +44,18 @@ function App() {
           <Route path="/vendor-dashboard" element={<ProtectedRoute allowedUserTypes={['vendor']}><VendorDashboard /></ProtectedRoute>} />
           <Route path="/supplier-dashboard" element={<ProtectedRoute allowedUserTypes={['supplier']}><SupplierDashboard /></ProtectedRoute>} />
           <Route path="/createorder" element={<ProtectedRoute allowedUserTypes={['vendor']}><CreateOrder /></ProtectedRoute>} />
+<<<<<<< HEAD
           <Route path="/admin-dashboard" element={<ProtectedRoute allowedUserTypes={['admin']}><AdminDashboard /></ProtectedRoute>} />
+=======
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
 
           {/* Fallback (optional but recommended) */}
           <Route path="*" element={<h1 style={{ padding: 40 }}>404 Page Not Found</h1>} />
         </Routes>
+<<<<<<< HEAD
         <LiveChat />
+=======
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
       </BrowserRouter>
     </AuthProvider>
   );

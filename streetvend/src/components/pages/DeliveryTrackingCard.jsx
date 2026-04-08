@@ -33,6 +33,7 @@ export default function DeliveryTrackingCard({ onClose }) {
           </div>
         </div>
 
+<<<<<<< HEAD
         {/* Interactive Map Embed */}
         <div className="w-full h-2/3 rounded-2xl overflow-hidden mt-8 border border-gray-100 shadow-inner relative group">
           <iframe 
@@ -53,6 +54,12 @@ export default function DeliveryTrackingCard({ onClose }) {
         {/* Message inside card */}
         <div className="text-center text-gray-400 text-sm mt-4">
           Real-time GPS tracking active. Your agent <span className="text-orange-600 font-bold">Rajesh</span> is 2.4 km away.
+=======
+        {/* Message inside card */}
+        <div className="text-center text-gray-500 text-lg font-medium mt-8">
+          Real-time tracking of your order.<br />
+          Click the truck above to view live location.
+>>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
         </div>
       </div>
     </div>
