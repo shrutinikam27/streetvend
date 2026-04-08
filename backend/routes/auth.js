@@ -96,9 +96,11 @@ router.post('/login', [
     body('email').isEmail().normalizeEmail(),
     body('password').exists()
 ], async (req, res) => {
+    console.log('Login attempt for:', req.body.email);
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.log('Login validation errors:', errors.array());
             return res.status(400).json({ errors: errors.array() });
         }
 
@@ -107,30 +109,40 @@ router.post('/login', [
         // Find user (ONLY if DB is fully connected)
         let user;
         if (mongoose.connection.readyState === 1) {
-            // DB connected, use database
+            console.log('Checking database for user...');
             user = await User.findOne({ email });
         } else {
-            // DB not connected, check mock users
+            console.log('Database not connected, checking mock users...');
             user = mockUsers.find(u => u.email === email);
         }
 
         if (!user) {
+            console.log('User not found:', email);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        console.log('User found, comparing passwords...');
         // Check password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.log('Password mismatch for:', email);
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        console.log('Password match, generating token...');
         // Create JWT token
+        if (!process.env.JWT_SECRET) {
+            console.error('FATAL: JWT_SECRET is missing in environment variables!');
+            return res.status(500).json({ message: 'Server configuration error' });
+        }
+
         const token = jwt.sign(
             { userId: user._id, userType: user.userType },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
 
+        console.log('Login successful for:', email);
         res.json({
             message: 'Login successful!',
             token,
@@ -142,8 +154,8 @@ router.post('/login', [
             }
         });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error('SERVER LOGIN ERROR:', error);
+        res.status(500).json({ message: 'Server error', details: error.message });
     }
 });
 
