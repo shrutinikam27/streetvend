@@ -162,17 +162,6 @@ return (
               />
               <span className="ml-2 text-sm text-gray-700">Supplier</span>
             </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="userType"
-                value="admin"
-                checked={formData.userType === 'admin'}
-                onChange={handleChange}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
-              />
-              <span className="ml-2 text-sm text-gray-700">Admin</span>
-            </label>
           </div>
         </div>
 
