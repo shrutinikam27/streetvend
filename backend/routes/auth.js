@@ -17,11 +17,11 @@ router.post('/register', [
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
     body('userType').isIn(['vendor', 'supplier', 'admin']).withMessage('Invalid user type')
 ], async (req, res) => {
-    console.log('Registration attempt:', req.body);
+    console.log('Registration attempt:', req.body.email, `(${req.body.userType})`);
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            console.log('Validation errors:', errors.array());
+            console.log('Registration validation errors:', errors.array());
             return res.status(400).json({ errors: errors.array() });
         }
 
@@ -30,17 +30,19 @@ router.post('/register', [
         // Check if user already exists (try DB first, fallback to mock)
         let existingUser;
         if (mongoose.connection.readyState === 1) {
-            // DB connected, use database
+            console.log('Checking database for existing user...');
             existingUser = await User.findOne({ email });
         } else {
-            // DB not connected, check mock users
+            console.log('Database not connected, checking mock users for existing user...');
             existingUser = mockUsers.find(u => u.email === email);
         }
 
         if (existingUser) {
+            console.log('User already exists:', email);
             return res.status(400).json({ message: 'User already exists' });
         }
 
+        console.log('Hashing password...');
         // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
@@ -48,7 +50,7 @@ router.post('/register', [
         // Create user (try DB first, fallback to mock)
         let user;
         if (mongoose.connection.readyState === 1) {
-            // DB connected, use database
+            console.log('Saving new user to database...');
             user = new User({
                 name,
                 email,
@@ -57,7 +59,7 @@ router.post('/register', [
             });
             await user.save();
         } else {
-            // DB not connected, create mock user
+            console.log('Database not connected, saving to mock users...');
             user = {
                 _id: Date.now().toString(),
                 name,
@@ -68,6 +70,7 @@ router.post('/register', [
             mockUsers.push(user);
         }
 
+        console.log('Generating token for new user...');
         // Create JWT token
         const token = jwt.sign(
             { userId: user._id, userType: user.userType },
@@ -75,6 +78,7 @@ router.post('/register', [
             { expiresIn: '7d' }
         );
 
+        console.log('Registration successful for:', email);
         res.status(201).json({
             message: 'Account created successfully!',
             token,
@@ -86,7 +90,7 @@ router.post('/register', [
             }
         });
     } catch (error) {
-        console.error('Registration error details:', error);
+        console.error('SERVER REGISTRATION ERROR:', error);
         res.status(500).json({ message: 'Server error', details: error.message });
     }
 });
