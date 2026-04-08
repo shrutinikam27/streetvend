@@ -452,7 +452,7 @@ const HomePage = () => {
         <div className="relative z-10 container mx-auto px-4">
           <SectionTitle
             title="Success Stories"
-            subtitle="Hear from vendors and suppliers who transformed their business with Vendorverse"
+            subtitle="Hear from vendors and suppliers who transformed their business with StreetVend"
             light
           />
 
@@ -461,7 +461,7 @@ const HomePage = () => {
               name="Rajesh Kumar"
               role="Pani Puri Vendor, Delhi"
               rating={5}
-              text="Vendorverse has completely changed how I source ingredients. I used to spend 3 hours every morning visiting markets. Now I place orders at night and get everything delivered fresh by 6 AM. The group order feature helped me save 20% on potatoes and onions!"
+              text="StreetVend has completely changed how I source ingredients. I used to spend 3 hours every morning visiting markets. Now I place orders at night and get everything delivered fresh by 6 AM. The group order feature helped me save 20% on potatoes and onions!"
               icon={<FaUser />}
               color="bg-orange-100"
               iconColor="text-orange-500"
@@ -471,7 +471,7 @@ const HomePage = () => {
               name="Priya Agro Products"
               role="Verified Supplier, Mumbai"
               rating={4.5}
-              text="As a supplier, Vendorverse has given us access to hundreds of loyal customers we could never reach before. The platform handles order management and payments, so we can focus on quality and delivery."
+              text="As a supplier, StreetVend has given us access to hundreds of loyal customers we could never reach before. The platform handles order management and payments, so we can focus on quality and delivery."
               icon={<FaBuilding />}
               color="bg-green-100"
               iconColor="text-green-500"

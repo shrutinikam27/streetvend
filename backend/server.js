@@ -9,15 +9,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-<<<<<<< HEAD
 // Log requests
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
 });
 
-=======
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
 // ===== MongoDB Connection =====
 const mongoURI = process.env.MONGO_URI;
 
@@ -26,7 +23,7 @@ if (!mongoURI) {
     process.exit(1);
 }
 
-mongoose.connect(mongoURI)
+mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 5000 })
     .then(() => console.log('✅ MongoDB connected'))
     .catch((err) => {
         console.error('❌ MongoDB connection error:', err.message);
@@ -37,11 +34,8 @@ mongoose.connect(mongoURI)
 // ===== Routes =====
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/orders', require('./routes/orders'));
-<<<<<<< HEAD
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/products', require('./routes/products'));
-=======
->>>>>>> 9bdae445493da8ec4ea2d8640cb4e2501e7503c3
 
 // Test Route
 app.get('/', (req, res) => {
