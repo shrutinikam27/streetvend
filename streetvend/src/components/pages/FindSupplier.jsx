@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaSearch, FaMapMarkerAlt, FaStar, FaStarHalfAlt, FaTruck, FaPhoneAlt, FaWhatsapp } from 'react-icons/fa';
+import API_URL from '../../config';
 
 const FindSuppliers = () => {
     const [suppliers, setSuppliers] = useState([]);
@@ -14,10 +15,10 @@ const FindSuppliers = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const supRes = await fetch('http://localhost:5007/api/auth/suppliers');
+                const supRes = await fetch(`${API_URL}/api/auth/suppliers`);
                 const supData = await supRes.json();
                 
-                const prodRes = await fetch('http://localhost:5007/api/products');
+                const prodRes = await fetch(`${API_URL}/api/products`);
                 const prodData = await prodRes.json();
                 
                 // Map real data to the UI format

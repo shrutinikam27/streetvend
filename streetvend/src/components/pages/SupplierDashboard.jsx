@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FaTruck, FaClipboardList, FaChartLine, FaUsers, FaBox, FaRupeeSign, FaSearch, FaFilter, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaChevronDown, FaArrowRight, FaMap, FaMapMarkerAlt, FaStar, FaStarHalfAlt } from 'react-icons/fa';
+import API_URL from '../../config';
 
 const SupplierDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -16,9 +17,9 @@ const SupplierDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const ordersRes = await fetch('http://localhost:5007/orders');
+                const ordersRes = await fetch(`${API_URL}/api/orders`);
                 const ordersData = await ordersRes.json();
-                const productsRes = await fetch('http://localhost:5007/products');
+                const productsRes = await fetch(`${API_URL}/api/products`);
                 const productsData = await productsRes.json();
 
                 const orders = ordersData.orders || [

@@ -4,6 +4,7 @@ import {
     FaUser, FaCog, FaBell, FaSearch, FaBars, FaTimes,
     FaPlus, FaChevronDown, FaRupeeSign, FaRegClock, FaCheckCircle
 } from 'react-icons/fa';
+import API_URL from '../../config';
 
 const VendorDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -21,9 +22,9 @@ const VendorDashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const ordersRes = await fetch('http://localhost:5007/orders');
+                const ordersRes = await fetch(`${API_URL}/api/orders`);
                 const ordersData = await ordersRes.json();
-                const inventoryRes = await fetch('http://localhost:5007/inventory');
+                const inventoryRes = await fetch(`${API_URL}/api/inventory`);
                 const inventoryData = await inventoryRes.json();
 
                 const orders = ordersData.orders || [

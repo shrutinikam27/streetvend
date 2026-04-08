@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../../config';
 
 const AdminDashboard = () => {
   const { user, token } = useAuth();
@@ -43,19 +44,19 @@ const AdminDashboard = () => {
     try {
       const headers = { 'x-auth-token': token };
 
-      const statsRes = await fetch('http://127.0.0.1:5007/api/admin/stats', { headers });
+      const statsRes = await fetch(`${API_URL}/api/admin/stats`, { headers });
       const statsData = await statsRes.json();
       setStats(statsData);
 
-      const usersRes = await fetch('http://127.0.0.1:5007/api/admin/users', { headers });
+      const usersRes = await fetch(`${API_URL}/api/admin/users`, { headers });
       const usersData = await usersRes.json();
       setUsers(usersData);
 
-      const ordersRes = await fetch('http://127.0.0.1:5007/api/admin/orders', { headers });
+      const ordersRes = await fetch(`${API_URL}/api/admin/orders`, { headers });
       const ordersData = await ordersRes.json();
       setOrders(ordersData);
 
-      const productsRes = await fetch('http://127.0.0.1:5007/api/products');
+      const productsRes = await fetch(`${API_URL}/api/products`);
       const productsData = await productsRes.json();
       setProducts(productsData);
     } catch (error) {
@@ -68,7 +69,7 @@ const AdminDashboard = () => {
   const deleteUser = async (id) => {
     if (window.confirm('Are you sure you want to delete this user?')) {
       try {
-        const response = await fetch(`http://127.0.0.1:5007/api/admin/users/${id}`, {
+        const response = await fetch(`${API_URL}/api/admin/users/${id}`, {
           method: 'DELETE',
           headers: { 'x-auth-token': token }
         });
@@ -85,7 +86,7 @@ const AdminDashboard = () => {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://127.0.0.1:5007/api/products', {
+      const response = await fetch(`${API_URL}/api/products`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,7 +108,7 @@ const AdminDashboard = () => {
   const updateSupplierDetails = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`http://127.0.0.1:5007/api/admin/users/${editingUser._id}`, {
+      const response = await fetch(`${API_URL}/api/admin/users/${editingUser._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +129,7 @@ const AdminDashboard = () => {
   const deleteProduct = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        const response = await fetch(`http://127.0.0.1:5007/api/products/${id}`, {
+        const response = await fetch(`${API_URL}/api/products/${id}`, {
           method: 'DELETE',
           headers: { 'x-auth-token': token }
         });
