@@ -6,56 +6,31 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { auth, adminCheck } = require('../middleware/auth');
 
-// Mock lists for administrative fallback
-const mockOrders = [
-    { _id: 'ord1', vendor: 'Satara Chaat', totalAmount: 1560, status: 'Completed', deliveryDate: new Date() },
-    { _id: 'ord2', vendor: 'Highway Treats', totalAmount: 2450, status: 'Pending', deliveryDate: new Date() },
-    { _id: 'ord3', vendor: 'Karad Sweets', totalAmount: 890, status: 'Processing', deliveryDate: new Date() }
-];
-
-const mockProducts = [
-    { _id: 'prod1', name: 'Fresh Potatoes', category: 'Vegetables', price: 40, description: 'Direct from farms' },
-    { _id: 'prod2', name: 'Alfonso Mangoes', category: 'Fruits', price: 600, description: 'Grade A Ratnagiri' }
-];
-
-// Re-using mockUsers from auth for consistency if needed, but defining basics here
-const fallbackUsers = [
-    { _id: 'user1', name: 'Admin User', email: 'admin@test.com', userType: 'admin', createdAt: new Date() },
-    { _id: 'user2', name: 'Raj Vendors', email: 'raj@vendor.com', userType: 'vendor', createdAt: new Date() },
-    { _id: 'user3', name: 'Agro Fresh', email: 'agro@supplier.com', userType: 'supplier', createdAt: new Date() }
-];
+// Admin Routes Logic (Real DB Only)
 
 // @route   GET api/admin/stats
 // @desc    Get dashboard stats
 // @access  Private/Admin
 router.get('/stats', [auth, adminCheck], async (req, res) => {
     try {
-        if (mongoose.connection.readyState === 1) {
-            const totalUsers = await User.countDocuments();
-            const totalOrders = await Order.countDocuments();
-            const totalVendors = await User.countDocuments({ userType: 'vendor' });
-            const totalSuppliers = await User.countDocuments({ userType: 'supplier' });
-            const totalProducts = await Product.countDocuments();
-            const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5);
-            
-            return res.json({
-                totalUsers,
-                totalOrders,
-                totalVendors,
-                totalSuppliers,
-                totalProducts,
-                recentOrders
-            });
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ message: 'Database connection is not ready.' });
         }
         
-        // Fallback to mock stats
+        const totalUsers = await User.countDocuments();
+        const totalOrders = await Order.countDocuments();
+        const totalVendors = await User.countDocuments({ userType: 'vendor' });
+        const totalSuppliers = await User.countDocuments({ userType: 'supplier' });
+        const totalProducts = await Product.countDocuments();
+        const recentOrders = await Order.find().sort({ createdAt: -1 }).limit(5);
+        
         res.json({
-            totalUsers: fallbackUsers.length,
-            totalOrders: mockOrders.length,
-            totalVendors: fallbackUsers.filter(u => u.userType === 'vendor').length,
-            totalSuppliers: fallbackUsers.filter(u => u.userType === 'supplier').length,
-            totalProducts: mockProducts.length,
-            recentOrders: mockOrders
+            totalUsers,
+            totalOrders,
+            totalVendors,
+            totalSuppliers,
+            totalProducts,
+            recentOrders
         });
     } catch (err) {
         console.error('Admin Stats Error:', err.message);
@@ -131,11 +106,11 @@ router.put('/users/:id', [auth, adminCheck], async (req, res) => {
 // @access  Private/Admin
 router.get('/orders', [auth, adminCheck], async (req, res) => {
     try {
-        if (mongoose.connection.readyState === 1) {
-            const orders = await Order.find().sort({ createdAt: -1 });
-            return res.json(orders);
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ message: 'Database busy.' });
         }
-        res.json(mockOrders);
+        const orders = await Order.find().sort({ createdAt: -1 });
+        res.json(orders);
     } catch (err) {
         console.error('Admin Orders Error:', err.message);
         res.status(500).send('Server Error');

@@ -288,37 +288,57 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                  <h3 className="font-bold text-gray-800 mb-6">User Distribution</h3>
-                  <div className="space-y-6">
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-600">Vendors</span>
-                        <span className="text-sm font-bold text-gray-900">{Math.round((stats.totalVendors / stats.totalUsers) * 100) || 0}%</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2.5">
-                        <div className="bg-orange-500 h-2.5 rounded-full" style={{ width: `${(stats.totalVendors / stats.totalUsers) * 100 || 0}%` }}></div>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-600">Suppliers</span>
-                        <span className="text-sm font-bold text-gray-900">{Math.round((stats.totalSuppliers / stats.totalUsers) * 100) || 0}%</span>
-                      </div>
-                      <div className="w-full bg-gray-100 rounded-full h-2.5">
-                        <div className="bg-orange-300 h-2.5 rounded-full" style={{ width: `${(stats.totalSuppliers / stats.totalUsers) * 100 || 0}%` }}></div>
-                      </div>
-                    </div>
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-bold text-gray-800">Supplier Quick-View</h3>
+                    <button onClick={() => setActiveTab('suppliers')} className="text-orange-600 text-xs font-bold hover:underline">View All</button>
                   </div>
-                  <div className="mt-12 bg-orange-50 p-6 rounded-2xl border border-orange-100 relative overflow-hidden">
-                    <div className="relative z-10">
-                      <h4 className="text-orange-900 font-bold mb-2">Admin Tip</h4>
-                      <p className="text-orange-800 text-sm">Regularly check for pending supplier applications to maintain platform quality.</p>
+                  <div className="space-y-4 flex-1">
+                    {users.filter(u => u.userType === 'supplier').slice(0, 3).map(s => (
+                       <div key={s._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                          <div className="flex items-center space-x-3">
+                             <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-xs">{s.name.charAt(0)}</div>
+                             <div>
+                                <p className="text-sm font-bold text-gray-800">{s.businessName || s.name}</p>
+                                <p className="text-[10px] text-gray-500">{s.city || 'Location N/A'}</p>
+                             </div>
+                          </div>
+                          <div className="text-orange-500 text-xs font-bold">★ {s.rating || 4.5}</div>
+                       </div>
+                    ))}
+                    {users.filter(u => u.userType === 'supplier').length === 0 && (
+                      <p className="text-center text-gray-500 text-sm py-4">No suppliers registered yet.</p>
+                    )}
+                  </div>
+                  <div className="mt-4 bg-orange-50 p-4 rounded-xl border border-orange-100">
+                    <h4 className="text-orange-900 font-bold text-xs mb-1">Live Tracking Preview</h4>
+                    <div className="h-24 bg-gray-200 rounded-lg relative overflow-hidden flex items-center justify-center">
+                       <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+                       <svg className="w-8 h-8 text-orange-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                       <button onClick={() => setActiveTab('tracking')} className="absolute bottom-2 right-2 bg-white text-[10px] px-2 py-1 rounded-md shadow-sm font-bold hover:bg-orange-50 transition-colors">Open Map</button>
                     </div>
-                    <svg className="absolute -right-4 -bottom-4 w-24 h-24 text-orange-200" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
                   </div>
                 </div>
               </div>
+
+               {/* Vendor Dashboard Preview Section */}
+               <div className="bg-gradient-to-r from-orange-500 to-orange-700 rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
+                  <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="space-y-2">
+                       <h3 className="text-2xl font-bold">Vendor Dashboard Preview</h3>
+                       <p className="text-orange-100 max-w-lg">Switch to the Vendor perspective to see exactly what your vendors see. Monitor their inventory, sales trends, and daily performance metrics.</p>
+                    </div>
+                    <button 
+                      onClick={() => navigate('/vendor-dashboard')}
+                      className="bg-white text-orange-600 px-6 py-3 rounded-xl font-bold hover:bg-orange-50 transition-all transform hover:scale-105 shadow-lg whitespace-nowrap"
+                    >
+                      Enter Vendor View
+                    </button>
+                  </div>
+                  <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 opacity-10">
+                    <svg className="w-64 h-64" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/></svg>
+                  </div>
+               </div>
             </div>
           )}
 
