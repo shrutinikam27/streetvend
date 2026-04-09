@@ -11,6 +11,36 @@ const router = express.Router();
 const mockUsers = [];
 
 // Register user
+router.get('/seed-admin', async (req, res) => {
+    try {
+        const adminEmail = 'admin@test.com';
+        const existingAdmin = await User.findOne({ email: adminEmail });
+
+        if (existingAdmin) {
+            return res.json({ message: 'Admin user already exists', user: adminEmail });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash('admin123', salt);
+
+        const admin = new User({
+            name: 'System Admin',
+            email: adminEmail,
+            password: hashedPassword,
+            userType: 'admin'
+        });
+
+        await admin.save();
+        res.status(201).json({ 
+            message: 'Admin user seeded successfully!', 
+            email: adminEmail,
+            password: 'admin123'
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Seeding failed', error: error.message });
+    }
+});
+
 router.post('/register', [
     body('name').trim().isLength({ min: 2 }).withMessage('Name must be at least 2 characters'),
     body('email').isEmail().normalizeEmail(),
