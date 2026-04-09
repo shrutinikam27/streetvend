@@ -43,7 +43,11 @@ app.use('/api/products', require('./routes/products'));
 
 // Test Route
 app.get('/', (req, res) => {
-    res.json({ message: 'StreetVend Backend API is running 🚀' });
+    res.json({ 
+        message: 'StreetVend Backend API is running 🚀',
+        database: mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ❌',
+        readyState: mongoose.connection.readyState
+    });
 });
 
 // ===== Server =====
