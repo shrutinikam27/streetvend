@@ -7,8 +7,7 @@ const User = require('../models/User');
 
 const router = express.Router();
 
-// Mock users for testing when DB is not connected
-const mockUsers = [];
+// Authentication Routes
 
 // Register user
 router.get('/seed-admin', async (req, res) => {
@@ -57,15 +56,13 @@ router.post('/register', [
 
         const { name, email, password, userType } = req.body;
 
-        // Check if user already exists (try DB first, fallback to mock)
-        let existingUser;
-        if (mongoose.connection.readyState === 1) {
-            console.log('Checking database for existing user...');
-            existingUser = await User.findOne({ email });
-        } else {
-            console.log('Database not connected, checking mock users for existing user...');
-            existingUser = mockUsers.find(u => u.email === email);
+        // Check if user already exists
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ message: 'Database connection is not ready. Please try again in a few seconds.' });
         }
+        
+        console.log('Checking database for existing user...');
+        const existingUser = await User.findOne({ email });
 
         if (existingUser) {
             console.log('User already exists:', email);
@@ -77,28 +74,15 @@ router.post('/register', [
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Create user (try DB first, fallback to mock)
-        let user;
-        if (mongoose.connection.readyState === 1) {
-            console.log('Saving new user to database...');
-            user = new User({
-                name,
-                email,
-                password: hashedPassword,
-                userType
-            });
-            await user.save();
-        } else {
-            console.log('Database not connected, saving to mock users...');
-            user = {
-                _id: Date.now().toString(),
-                name,
-                email,
-                password: hashedPassword,
-                userType
-            };
-            mockUsers.push(user);
-        }
+        // Create user
+        console.log('Saving new user to database...');
+        const user = new User({
+            name,
+            email,
+            password: hashedPassword,
+            userType
+        });
+        await user.save();
 
         console.log('Generating token for new user...');
         // Create JWT token
@@ -140,15 +124,13 @@ router.post('/login', [
 
         const { email, password } = req.body;
 
-        // Find user (ONLY if DB is fully connected)
-        let user;
-        if (mongoose.connection.readyState === 1) {
-            console.log('Checking database for user...');
-            user = await User.findOne({ email });
-        } else {
-            console.log('Database not connected, checking mock users...');
-            user = mockUsers.find(u => u.email === email);
+        // Find user
+        if (mongoose.connection.readyState !== 1) {
+            return res.status(503).json({ message: 'Database connection is not ready. Please try again in a few seconds.' });
         }
+
+        console.log('Checking database for user...');
+        const user = await User.findOne({ email });
 
         if (!user) {
             console.log('User not found:', email);
