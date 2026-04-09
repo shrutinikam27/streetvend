@@ -362,7 +362,7 @@ const HomePage = () => {
                     <div className="text-center">
                       <div className="flex justify-center items-center min-h-64">
                         <img
-                          src="public/images/dashboard_overview.png"
+                          src="/images/dashboard_overview.png"
                           alt="Vendor Dashboard Preview"
                           className="rounded-xl shadow-2xl max-h-96 w-auto object-cover border-4 border-white"
                         />
@@ -397,7 +397,7 @@ const HomePage = () => {
                   <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 p-6 md:col-span-2">
                     <div className="text-center">
                       <img
-                        src="public/images/dashboard_overview.png"
+                        src="/images/dashboard_overview.png"
                         alt="Supplier Dashboard Preview"
                         className="mx-auto rounded-xl shadow-2xl max-h-96 w-auto object-cover border-4 border-white"
                       />
@@ -431,7 +431,7 @@ const HomePage = () => {
                   <div className="bg-gradient-to-r from-orange-100 via-orange-50 to-orange-100 border-2 border-dashed border-orange-300 rounded-2xl w-full min-h-96 p-6 md:col-span-2">
                     <div className="text-center">
                       <img
-                        src="public/images/tracking_preview.png"
+                        src="/images/tracking_preview.png"
                         alt="Live Tracking Preview"
                         className="mx-auto rounded-xl shadow-2xl max-h-96 w-auto object-cover border-4 border-white"
                       />
