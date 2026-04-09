@@ -178,14 +178,3 @@ If you have any suggestions or feedback, feel free to connect!
 
 ---
 
----
-
-### 🔥 If you want next level:
-
-I can also:
-
-* Add **badges (GitHub stars, tech logos)**
-* Write **AI feature explanation (very impressive for viva/interview)**
-* Customize README for **placements / recruiters**
-
-Just tell me 👍
