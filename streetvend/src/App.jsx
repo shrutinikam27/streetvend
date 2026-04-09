@@ -15,7 +15,16 @@ import AdminDashboard from "./components/pages/AdminDashboard";
 import LiveChat from "./components/common/LiveChat";
 
 const ProtectedRoute = ({ children, allowedUserTypes }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/" />;
   }

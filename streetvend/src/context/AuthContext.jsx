@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [token, setToken] = useState(null);
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
@@ -23,6 +24,7 @@ export const AuthProvider = ({ children }) => {
             setUser(JSON.parse(storedUser));
             setIsAuthenticated(true);
         }
+        setLoading(false);
     }, []);
 
     const login = (newToken, userData) => {
@@ -45,6 +47,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         token,
         user,
+        loading,
         login,
         logout,
     };
