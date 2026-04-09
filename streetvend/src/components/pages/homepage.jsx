@@ -73,13 +73,13 @@ const HomePage = () => {
                 </a>
               ))}
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3">
               {isAuthenticated ? (
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   {user && user.userType === 'admin' && (
                     <Link to="/admin-dashboard">
-                      <button className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 font-medium shadow-md">
-                        Admin Panel
+                      <button className="px-3 sm:px-6 py-2 sm:py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-300 transform hover:scale-105 font-medium shadow-md text-xs sm:text-base">
+                        Admin
                       </button>
                     </Link>
                   )}
@@ -88,21 +88,21 @@ const HomePage = () => {
                       logout();
                       alert('Logged out successfully!');
                     }}
-                    className="px-6 py-2.5 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium"
+                    className="px-3 sm:px-6 py-2 sm:py-2.5 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium text-xs sm:text-base"
                   >
-                    Sign Out
+                    Logout
                   </button>
                 </div>
               ) : (
                 <>
                   <Link to="/login">
-                    <button className="px-6 py-2.5 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium">
+                    <button className="px-3 sm:px-6 py-2 sm:py-2.5 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-500 hover:text-white transition-all duration-300 transform hover:scale-105 font-medium text-xs sm:text-base">
                       Login
                     </button>
                   </Link>
 
                   <Link to="/signup">
-                    <button className="px-6 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium">
+                    <button className="px-3 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl font-medium text-xs sm:text-base">
                       Sign Up
                     </button>
                   </Link>

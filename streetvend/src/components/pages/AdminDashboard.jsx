@@ -30,6 +30,7 @@ const AdminDashboard = () => {
     description: '',
     supplierId: ''
   });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!user || user.userType !== 'admin') {
@@ -153,49 +154,52 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-64 bg-white shadow-xl hidden md:block">
-        <div className="p-6 border-b">
+      {/* Sidebar - Overlay for mobile */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-6 border-b flex justify-between items-center">
           <h1 className="text-2xl font-bold text-orange-600">Admin Portal</h1>
+          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-gray-500">
+             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
         </div>
         <nav className="p-4 space-y-2">
           <button
-            onClick={() => setActiveTab('overview')}
+            onClick={() => { setActiveTab('overview'); setSidebarOpen(false); }}
             className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'overview' ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
             <span className="font-medium">Overview</span>
           </button>
           <button
-            onClick={() => setActiveTab('users')}
+            onClick={() => { setActiveTab('users'); setSidebarOpen(false); }}
             className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'users' ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             <span className="font-medium">Users</span>
           </button>
           <button
-            onClick={() => setActiveTab('orders')}
+            onClick={() => { setActiveTab('orders'); setSidebarOpen(false); }}
             className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'orders' ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
             <span className="font-medium">Orders</span>
           </button>
           <button
-            onClick={() => setActiveTab('products')}
+            onClick={() => { setActiveTab('products'); setSidebarOpen(false); }}
             className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'products' ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
             <span className="font-medium">Products</span>
           </button>
           <button
-            onClick={() => setActiveTab('suppliers')}
+            onClick={() => { setActiveTab('suppliers'); setSidebarOpen(false); }}
             className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'suppliers' ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
             <span className="font-medium">Suppliers</span>
           </button>
           <button
-            onClick={() => setActiveTab('tracking')}
+            onClick={() => { setActiveTab('tracking'); setSidebarOpen(false); }}
             className={`w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 ${activeTab === 'tracking' ? 'bg-orange-50 text-orange-600 border-l-4 border-orange-500' : 'text-gray-600 hover:bg-gray-50'}`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
@@ -211,15 +215,20 @@ const AdminDashboard = () => {
         </nav>
       </div>
 
+      {sidebarOpen && <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 bg-black/50 z-40 md:hidden"></div>}
+
       {/* Main Content */}
       <div className="flex-1 overflow-y-auto">
-        <header className="bg-white shadow px-8 py-6">
-          <h2 className="text-xl font-semibold text-gray-800">
+        <header className="bg-white shadow px-4 md:px-8 py-4 md:py-6 flex items-center">
+          <button onClick={() => setSidebarOpen(true)} className="md:hidden mr-4 text-gray-600">
+             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
+          </button>
+          <h2 className="text-lg md:text-xl font-semibold text-gray-800 truncate">
             {activeTab === 'overview' ? 'Dashboard Overview' : activeTab === 'users' ? 'User Management' : activeTab === 'orders' ? 'Order Management' : activeTab === 'products' ? 'Product Management' : activeTab === 'suppliers' ? 'Supplier Management' : 'Live Delivery Tracking'}
           </h2>
         </header>
 
-        <main className="p-8">
+        <main className="p-4 md:p-8">
           {activeTab === 'overview' && (
             <div className="space-y-8">
               {/* Stats Grid */}
