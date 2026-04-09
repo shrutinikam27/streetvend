@@ -9,9 +9,25 @@ const router = express.Router();
 
 // Authentication Routes
 
+// Helper to ensure DB is connected
+const ensureDB = async () => {
+    if (mongoose.connection.readyState === 1) return true;
+    
+    console.log('Waiting for database connection...');
+    // Wait for up to 5 seconds for the connection to be established
+    for (let i = 0; i < 10; i++) {
+        if (mongoose.connection.readyState === 1) return true;
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+    return mongoose.connection.readyState === 1;
+};
+
 // Register user
 router.get('/seed-admin', async (req, res) => {
     try {
+        if (!(await ensureDB())) {
+            return res.status(503).json({ message: 'Database connection is still initializing. Please refresh in a moment.' });
+        }
         const adminEmail = 'admin@test.com';
         const existingAdmin = await User.findOne({ email: adminEmail });
 
@@ -56,9 +72,9 @@ router.post('/register', [
 
         const { name, email, password, userType } = req.body;
 
-        // Check if user already exists
-        if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ message: 'Database connection is not ready. Please try again in a few seconds.' });
+        // Ensure DB is ready
+        if (!(await ensureDB())) {
+            return res.status(503).json({ message: 'Database is connecting. Please try again in a few seconds.' });
         }
         
         console.log('Checking database for existing user...');
@@ -124,9 +140,9 @@ router.post('/login', [
 
         const { email, password } = req.body;
 
-        // Find user
-        if (mongoose.connection.readyState !== 1) {
-            return res.status(503).json({ message: 'Database connection is not ready. Please try again in a few seconds.' });
+        // Ensure DB is ready
+        if (!(await ensureDB())) {
+            return res.status(503).json({ message: 'Database is connecting. Please try again in a few seconds.' });
         }
 
         console.log('Checking database for user...');
