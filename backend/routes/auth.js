@@ -122,7 +122,7 @@ router.post('/login', [
 
         if (!user) {
             console.log('User not found:', email);
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'User not found. Please check your email or sign up.' });
         }
 
         console.log('User found, comparing passwords...');
@@ -130,7 +130,7 @@ router.post('/login', [
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             console.log('Password mismatch for:', email);
-            return res.status(400).json({ message: 'Invalid credentials' });
+            return res.status(400).json({ message: 'Invalid password. Please try again.' });
         }
 
         console.log('Password match, generating token...');

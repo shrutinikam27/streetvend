@@ -21,19 +21,33 @@ app.use((req, res, next) => {
 
 // ===== MongoDB Connection =====
 const mongoURI = process.env.MONGO_URI;
+let dbError = null;
 
 if (!mongoURI) {
-    console.error("❌ MONGO_URI not found in .env file");
-    process.exit(1);
+    console.error("❌ MONGO_URI not found in environment variables");
+    // On Vercel, we might not want to exit immediately to allow the status route to show the error
 }
 
-mongoose.connect(mongoURI, { serverSelectionTimeoutMS: 5000 })
-    .then(() => console.log('✅ MongoDB connected'))
-    .catch((err) => {
+const connectDB = async () => {
+    try {
+        if (mongoose.connection.readyState === 1) return;
+        
+        console.log('Attempting to connect to MongoDB...');
+        await mongoose.connect(mongoURI, { 
+            serverSelectionTimeoutMS: 5000,
+            connectTimeoutMS: 10000,
+        });
+        console.log('✅ MongoDB connected');
+        dbError = null;
+    } catch (err) {
+        dbError = err.message;
         console.error('❌ MongoDB connection error:', err.message);
-        // Don't exit process, just log the error
-        console.log('⚠️  Server will continue running without database connection');
-    });
+        console.log('⚠️  Server will continue running in mock mode if DB connection fails');
+    }
+};
+
+// Initial connection attempt
+connectDB();
 
 // ===== Routes =====
 app.use('/api/auth', require('./routes/auth'));
@@ -42,11 +56,18 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/products', require('./routes/products'));
 
 // Test Route
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+    // Try to reconnect if disconnected
+    if (mongoose.connection.readyState !== 1) {
+        await connectDB();
+    }
+    
     res.json({ 
         message: 'StreetVend Backend API is running 🚀',
         database: mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ❌',
-        readyState: mongoose.connection.readyState
+        readyState: mongoose.connection.readyState,
+        dbError: dbError,
+        environment: process.env.NODE_ENV || 'development'
     });
 });
 
