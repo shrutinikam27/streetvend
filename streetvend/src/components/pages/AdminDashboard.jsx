@@ -892,6 +892,7 @@ const AdminDashboard = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[650px]">
                 {/* Map Area */}
+                <div className="lg:col-span-2 bg-gray-100 rounded-3xl overflow-hidden relative shadow-inner border border-gray-200">
                   {/* Real Live Map */}
                   <div className="absolute inset-0 z-0">
                     <LiveMap 
