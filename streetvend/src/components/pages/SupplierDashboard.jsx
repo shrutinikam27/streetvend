@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaTruck, FaClipboardList, FaChartLine, FaUsers, FaBox, FaRupeeSign, FaSearch, FaFilter, FaPlus, FaEdit, FaTrash, FaCheckCircle, FaTimesCircle, FaChevronDown, FaArrowRight, FaMap, FaMapMarkerAlt, FaStar, FaStarHalfAlt } from 'react-icons/fa';
 import API_URL from '../../config';
+import LiveMap from '../common/LiveMap';
+import { useTracking } from '../../hooks/useTracking';
 
 const SupplierDashboard = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -12,6 +14,10 @@ const SupplierDashboard = () => {
         completedOrders: 0,
         revenue: 0
     });
+    const [trackingOrderId, setTrackingOrderId] = useState(null);
+
+    // Tracking hook
+    const { location, startTracking, stopTracking } = useTracking(trackingOrderId, true);
 
     // Initialize with real data from backend
     useEffect(() => {
@@ -172,7 +178,14 @@ const SupplierDashboard = () => {
                     {activeTab === 'dashboard' && <DashboardOverview stats={stats} orders={orders} />}
                     {activeTab === 'orders' && <OrdersTab orders={orders} />}
                     {activeTab === 'products' && <ProductsTab products={products} />}
-                    {activeTab === 'delivery' && <DeliveryTab orders={orders} />}
+                    {activeTab === 'delivery' && <DeliveryTab 
+                        orders={orders} 
+                        trackingOrderId={trackingOrderId}
+                        setTrackingOrderId={setTrackingOrderId}
+                        startTracking={startTracking}
+                        stopTracking={stopTracking}
+                        currentLocation={location}
+                    />}
                     {activeTab === 'vendors' && <VendorsTab />}
                 </div>
             </div>
@@ -484,20 +497,28 @@ const ProductsTab = ({ products }) => {
 };
 
 // Delivery Tab Component
-const DeliveryTab = ({ orders }) => {
+const DeliveryTab = ({ orders, trackingOrderId, setTrackingOrderId, startTracking, stopTracking, currentLocation }) => {
     // Filter only pending orders for delivery
     const pendingOrders = orders.filter(order => order.status === 'pending');
+
+    const handleStartDelivery = (orderId) => {
+        setTrackingOrderId(orderId);
+        startTracking('SUPPLIER_001'); // In a real app, use the actual supplier ID
+    };
 
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-800">Delivery Management</h2>
-
-                <div className="flex gap-4">
-                    <button className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
-                        <FaPlus /> Schedule Delivery
+                
+                {trackingOrderId && (
+                    <button 
+                        onClick={() => { stopTracking(); setTrackingOrderId(null); }}
+                        className="bg-red-600 text-white px-4 py-2 rounded-lg flex items-center gap-2"
+                    >
+                        <FaTimesCircle /> Stop Tracking
                     </button>
-                </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -505,26 +526,25 @@ const DeliveryTab = ({ orders }) => {
                     <h3 className="font-semibold text-gray-800 mb-4">Today's Deliveries</h3>
 
                     <div className="space-y-4">
-                        {pendingOrders.slice(0, 3).map(order => (
-                            <div key={order.id} className="border-b pb-4 last:border-0 last:pb-0">
+                        {pendingOrders.map(order => (
+                            <div key={order.id} className={`border-b pb-4 last:border-0 last:pb-0 ${trackingOrderId === order.id ? 'bg-orange-50 p-3 rounded-lg' : ''}`}>
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
                                         <h4 className="font-medium">#{order.id} - {order.vendor}</h4>
                                         <p className="text-gray-500 text-sm">{order.items} items</p>
                                     </div>
-                                    <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs">
-                                        Pending
+                                    <span className={`px-2 py-1 rounded-full text-xs ${trackingOrderId === order.id ? 'bg-green-100 text-green-700 animate-pulse' : 'bg-yellow-100 text-yellow-700'}`}>
+                                        {trackingOrderId === order.id ? 'Live' : 'Pending'}
                                     </span>
                                 </div>
 
-                                <div className="flex items-center gap-2 text-gray-500 text-sm">
-                                    <FaMapMarkerAlt className="text-orange-500" />
-                                    <span>Mumbai Central</span>
-                                </div>
-
                                 <div className="mt-3">
-                                    <button className="w-full bg-orange-100 text-orange-700 py-2 rounded-lg hover:bg-orange-200">
-                                        Start Delivery
+                                    <button 
+                                        onClick={() => handleStartDelivery(order.id)}
+                                        disabled={trackingOrderId === order.id}
+                                        className={`w-full py-2 rounded-lg transition ${trackingOrderId === order.id ? 'bg-gray-100 text-gray-400' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}
+                                    >
+                                        {trackingOrderId === order.id ? 'Tracking Active' : 'Start Delivery & GPS'}
                                     </button>
                                 </div>
                             </div>
@@ -532,60 +552,22 @@ const DeliveryTab = ({ orders }) => {
                     </div>
                 </div>
 
-                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6 relative overflow-hidden">
                     <h3 className="font-semibold text-gray-800 mb-4">Delivery Map</h3>
-
-                    <div className="h-96 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <div className="text-center text-gray-500">
-                            <FaMap className="text-4xl mx-auto mb-3" />
-                            <p>Interactive delivery map visualization</p>
-                            <p className="text-sm mt-2">Showing delivery routes and vendor locations</p>
-                        </div>
+                    <div className="h-96 rounded-lg overflow-hidden border">
+                        <LiveMap 
+                            center={currentLocation}
+                            markers={currentLocation ? [{ ...currentLocation, type: 'delivery', label: 'You' }] : []}
+                            height="100%"
+                            zoom={15}
+                        />
                     </div>
                 </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b">
-                    <h3 className="font-semibold text-gray-800">Delivery History</h3>
-                </div>
-
-                <table className="w-full">
-                    <thead>
-                        <tr className="bg-gray-50 text-left text-gray-500 text-sm">
-                            <th className="py-3 px-4">Order ID</th>
-                            <th className="py-3 px-4">Vendor</th>
-                            <th className="py-3 px-4">Date</th>
-                            <th className="py-3 px-4">Driver</th>
-                            <th className="py-3 px-4">Status</th>
-                            <th className="py-3 px-4">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {orders.filter(o => o.status === 'completed').slice(0, 5).map(order => (
-                            <tr key={order.id} className="border-b hover:bg-gray-50">
-                                <td className="py-4 px-4 font-medium">#{order.id}</td>
-                                <td className="py-4 px-4">{order.vendor}</td>
-                                <td className="py-4 px-4">{order.date}</td>
-                                <td className="py-4 px-4">Ramesh Kumar</td>
-                                <td className="py-4 px-4">
-                                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs">
-                                        Delivered
-                                    </span>
-                                </td>
-                                <td className="py-4 px-4">
-                                    <button className="text-orange-600 hover:text-orange-700">
-                                        View Details
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
             </div>
         </div>
     );
 };
+
 
 // Vendors Tab Component
 const VendorsTab = () => {

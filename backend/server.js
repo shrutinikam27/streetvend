@@ -1,13 +1,22 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: '*', // For production restrict this to your frontend URL
+        methods: ['GET', 'POST']
+    }
+});
 
 // Middleware
 app.use(cors({
-    origin: '*', // For production you can restrict to the specific Vercel URL
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'x-auth-token']
 }));
@@ -25,7 +34,6 @@ let dbError = null;
 
 if (!mongoURI) {
     console.error("❌ MONGO_URI not found in environment variables");
-    // On Vercel, we might not want to exit immediately to allow the status route to show the error
 }
 
 const connectDB = async () => {
@@ -42,12 +50,39 @@ const connectDB = async () => {
     } catch (err) {
         dbError = err.message;
         console.error('❌ MongoDB connection error:', err.message);
-        console.log('⚠️  Server will continue running in mock mode if DB connection fails');
     }
 };
 
-// Initial connection attempt
 connectDB();
+
+// ===== Socket.io Logic =====
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+
+    // Join a specific order tracking room
+    socket.on('join-order', (orderId) => {
+        socket.join(`order-${orderId}`);
+        console.log(`Socket ${socket.id} joined tracking room: order-${orderId}`);
+    });
+
+    // Handle incoming location updates from suppliers
+    socket.on('update-location', (data) => {
+        const { orderId, location, supplierId } = data;
+        console.log(`Location update for order ${orderId}:`, location);
+        
+        // Broadcast to everyone in that order room (usually the customer and admin)
+        io.to(`order-${orderId}`).emit('location-updated', {
+            orderId,
+            location,
+            supplierId,
+            timestamp: new Date()
+        });
+    });
+
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
 
 // ===== Routes =====
 app.use('/api/auth', require('./routes/auth'));
@@ -57,13 +92,12 @@ app.use('/api/products', require('./routes/products'));
 
 // Test Route
 app.get('/', async (req, res) => {
-    // Try to reconnect if disconnected
     if (mongoose.connection.readyState !== 1) {
         await connectDB();
     }
     
     res.json({ 
-        message: 'StreetVend Backend API is running 🚀',
+        message: 'StreetVend Backend API with Real-time Tracking is running 🚀',
         database: mongoose.connection.readyState === 1 ? 'Connected ✅' : 'Disconnected ❌',
         readyState: mongoose.connection.readyState,
         dbError: dbError,
@@ -74,6 +108,7 @@ app.get('/', async (req, res) => {
 // ===== Server =====
 const PORT = process.env.PORT || 5007;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
+

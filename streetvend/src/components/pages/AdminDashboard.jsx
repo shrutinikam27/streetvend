@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import API_URL from '../../config';
+import LiveMap from '../common/LiveMap';
+import { useTracking } from '../../hooks/useTracking';
 
 const AdminDashboard = () => {
   const { user, token } = useAuth();
@@ -31,6 +33,16 @@ const AdminDashboard = () => {
     supplierId: ''
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Real-time tracking hook
+  const { othersLocations } = useTracking(activeTrackingOrder?._id);
+
+  // Convert othersLocations object to array for LiveMap
+  const activeMarkers = Object.entries(othersLocations).map(([supplierId, loc]) => ({
+    ...loc,
+    type: 'delivery',
+    label: `Supplier ${supplierId.slice(-4)}`
+  }));
 
   useEffect(() => {
     if (!user || user.userType !== 'admin') {
@@ -763,9 +775,15 @@ const AdminDashboard = () => {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-[650px]">
                 {/* Map Area */}
-                <div className="lg:col-span-2 relative bg-gray-100 rounded-3xl overflow-hidden border-4 border-white shadow-2xl">
-                  {/* Fake Map Background using a beautiful gradient pattern */}
-                  <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#d1d5db 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
+                  {/* Real Live Map */}
+                  <div className="absolute inset-0 z-0">
+                    <LiveMap 
+                      center={activeMarkers.length > 0 ? activeMarkers[0] : null}
+                      markers={activeMarkers}
+                      height="100%"
+                      zoom={14}
+                    />
+                  </div>
 
                   {/* Map UI Elements */}
                   <div className="absolute top-6 left-6 z-10 space-y-2">
@@ -775,43 +793,11 @@ const AdminDashboard = () => {
                       </div>
                       <div>
                         <p className="text-[10px] uppercase font-bold text-gray-400">Current View</p>
-                        <p className="text-sm font-bold text-gray-800">Satara Smart Logistics Hub</p>
+                        <p className="text-sm font-bold text-gray-800">
+                          {activeMarkers.length > 0 ? 'Live Tracking Active' : 'Waiting for GPS signal...'}
+                        </p>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Delivery Pins - Use real data or fallback to mock */}
-                  {(stats.recentOrders.length > 0 ? stats.recentOrders : [
-                    { _id: 'mock1', status: 'Near Powai Naka', customerName: 'Satara Chaat' },
-                    { _id: 'mock2', status: 'In Transit - Wai', customerName: 'Highway Treats' },
-                    { _id: 'mock3', status: 'Delivered - Karad', customerName: 'Karad Sweets' }
-                  ]).map((order, idx) => (
-                    <div
-                      key={order._id || idx}
-                      className={`absolute transition-all duration-1000 ${idx === 0 ? 'top-[40%] left-[30%]' : idx === 1 ? 'top-[60%] left-[50%]' : 'top-[25%] left-[65%]'} cursor-pointer group hover:z-20`}
-                      onClick={() => setActiveTrackingOrder(order)}
-                    >
-                      <div className={`relative ${activeTrackingOrder?._id === order._id ? 'scale-125' : 'scale-100'} transition-transform`}>
-                        <div className="absolute -inset-4 bg-orange-500/20 rounded-full animate-ping"></div>
-                        <div className="relative bg-white p-1.5 rounded-full shadow-xl border-2 border-orange-500">
-                          <div className="bg-orange-500 p-2 rounded-full text-white">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                          </div>
-                        </div>
-                        {/* Tooltip */}
-                        <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-40 bg-gray-900 text-white p-3 rounded-2xl text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-all pointer-events-none text-center shadow-2xl">
-                          <p className="text-orange-400 mb-1">Order: #{order._id?.slice(-5) || 'TRK-' + (idx + 1)}</p>
-                          <p className="text-[12px]">{order.status || 'SHIPPED'}</p>
-                          <p className="text-gray-400 mt-1 uppercase tracking-widest text-[8px]">Agent: Rajesh K.</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* User Center Point (Simulated) */}
-                  <div className="absolute bottom-6 right-6 z-10 flex space-x-2">
-                    <button className="bg-white p-3 rounded-2xl shadow-lg hover:bg-gray-50 transition-colors text-gray-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg></button>
-                    <button className="bg-white p-3 rounded-2xl shadow-lg hover:bg-gray-50 transition-colors text-gray-600"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" /></svg></button>
                   </div>
                 </div>
 
