@@ -25,6 +25,13 @@ const AdminDashboard = () => {
   const [viewingProducts, setViewingProducts] = useState(null);
   const [viewingTracking, setViewingTracking] = useState(null);
   const [activeTrackingOrder, setActiveTrackingOrder] = useState(null);
+  const [creatingUser, setCreatingUser] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    password: '',
+    userType: 'supplier'
+  });
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: '',
@@ -93,6 +100,32 @@ const AdminDashboard = () => {
       } catch (error) {
         console.error('Error deleting user:', error);
       }
+    }
+  };
+
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-auth-token': token
+        },
+        body: JSON.stringify(newUser)
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setUsers([...users, { ...data.user, createdAt: new Date().toISOString() }]);
+        setCreatingUser(false);
+        setNewUser({ name: '', email: '', password: '', userType: 'supplier' });
+        alert('User created successfully');
+      } else {
+        alert(data.message || 'Failed to create user');
+      }
+    } catch (error) {
+      console.error('Error creating user:', error);
+      alert('An error occurred while creating the user');
     }
   };
 
@@ -693,11 +726,80 @@ const AdminDashboard = () => {
           {activeTab === 'suppliers' && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-6 border-b flex justify-between items-center">
-                <h3 className="font-bold text-gray-800">Active Suppliers</h3>
-                <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold">
-                  {users.filter(u => u.userType === 'supplier').length} Total
-                </span>
+                <div className="flex items-center space-x-4">
+                  <h3 className="font-bold text-gray-800">Active Suppliers</h3>
+                  <span className="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold">
+                    {users.filter(u => u.userType === 'supplier').length} Total
+                  </span>
+                </div>
+                <button
+                  onClick={() => setCreatingUser(true)}
+                  className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-700 transition-colors shadow-sm text-sm"
+                >
+                  + Add New Supplier
+                </button>
               </div>
+              {/* Modal for Creating Supplier */}
+              {creatingUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                  <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+                    <div className="p-6 border-b flex justify-between items-center bg-orange-600 text-white rounded-t-2xl">
+                      <h3 className="text-xl font-bold">Create New Supplier</h3>
+                      <button onClick={() => setCreatingUser(false)} className="hover:text-orange-200">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                      </button>
+                    </div>
+                    <form onSubmit={handleAddUser} className="p-8 space-y-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500"
+                          value={newUser.name}
+                          onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Email (Login ID)</label>
+                        <input
+                          type="email"
+                          required
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500"
+                          value={newUser.email}
+                          onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Temporary Password</label>
+                        <input
+                          type="text"
+                          required
+                          className="w-full px-4 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-500"
+                          value={newUser.password}
+                          onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                        />
+                      </div>
+                      <div className="flex justify-end space-x-4 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => setCreatingUser(false)}
+                          className="px-6 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-6 py-2 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-700 transition-colors shadow-lg"
+                        >
+                          Create Supplier Account
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
               <table className="w-full text-left">
                 <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase">
                   <tr>

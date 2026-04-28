@@ -65,7 +65,7 @@ return (
           Create your account
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600">
-          Join StreetVend as a vendor or supplier
+          Join StreetVend as a vendor
         </p>
       </div>
       <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -132,36 +132,6 @@ return (
               value={formData.confirmPassword}
               onChange={handleChange}
             />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            I am a:
-          </label>
-          <div className="flex space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="userType"
-                value="vendor"
-                checked={formData.userType === 'vendor'}
-                onChange={handleChange}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
-              />
-              <span className="ml-2 text-sm text-gray-700">Vendor</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="userType"
-                value="supplier"
-                checked={formData.userType === 'supplier'}
-                onChange={handleChange}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
-              />
-              <span className="ml-2 text-sm text-gray-700">Supplier</span>
-            </label>
           </div>
         </div>
 

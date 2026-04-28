@@ -24,7 +24,17 @@ const Login = () => {
       if (response.ok) {
         login(data.token, data.user);
         alert('Login successful!');
-        navigate('/');
+        
+        // Redirect to respective dashboard based on user type
+        if (data.user.userType === 'admin') {
+          navigate('/admin-dashboard');
+        } else if (data.user.userType === 'supplier') {
+          navigate('/supplier-dashboard');
+        } else if (data.user.userType === 'vendor') {
+          navigate('/vendor-dashboard');
+        } else {
+          navigate('/');
+        }
       } else {
         alert(data.message || 'Login failed');
       }

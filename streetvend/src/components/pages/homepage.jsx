@@ -83,6 +83,20 @@ const HomePage = () => {
                       </button>
                     </Link>
                   )}
+                  {user && user.userType === 'vendor' && (
+                    <Link to="/vendor-dashboard">
+                      <button className="px-3 sm:px-6 py-2 sm:py-2.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-all duration-300 transform hover:scale-105 font-medium shadow-md text-xs sm:text-base">
+                        Dashboard
+                      </button>
+                    </Link>
+                  )}
+                  {user && user.userType === 'supplier' && (
+                    <Link to="/supplier-dashboard">
+                      <button className="px-3 sm:px-6 py-2 sm:py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 font-medium shadow-md text-xs sm:text-base">
+                        Dashboard
+                      </button>
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       logout();
