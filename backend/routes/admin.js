@@ -33,8 +33,7 @@ router.get('/stats', [auth, adminCheck], async (req, res) => {
             recentOrders
         });
     } catch (err) {
-        console.error('Admin Stats Error:', err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
@@ -47,10 +46,10 @@ router.get('/users', [auth, adminCheck], async (req, res) => {
             const users = await User.find().select('-password').sort({ createdAt: -1 });
             return res.json(users);
         }
-        res.json(fallbackUsers);
+        res.json([]);
     } catch (err) {
         console.error('Admin Users Error:', err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
@@ -69,8 +68,7 @@ router.delete('/users/:id', [auth, adminCheck], async (req, res) => {
         }
         res.json({ message: 'User removed (Mock Mode)' });
     } catch (err) {
-        console.error('Admin Delete User Error:', err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
@@ -96,8 +94,7 @@ router.put('/users/:id', [auth, adminCheck], async (req, res) => {
         }
         res.json({ ...userFields, _id: req.params.id, message: 'User updated (Mock Mode)' });
     } catch (err) {
-        console.error('Admin Update User Error:', err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 
@@ -112,8 +109,7 @@ router.get('/orders', [auth, adminCheck], async (req, res) => {
         const orders = await Order.find().sort({ createdAt: -1 });
         res.json(orders);
     } catch (err) {
-        console.error('Admin Orders Error:', err.message);
-        res.status(500).send('Server Error');
+        res.status(500).json({ message: 'Server Error' });
     }
 });
 

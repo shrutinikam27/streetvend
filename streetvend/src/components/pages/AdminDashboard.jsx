@@ -65,20 +65,28 @@ const AdminDashboard = () => {
       const headers = { 'x-auth-token': token };
 
       const statsRes = await fetch(`${API_URL}/api/admin/stats`, { headers });
-      const statsData = await statsRes.json();
-      setStats(statsData);
+      if (statsRes.ok) {
+        const statsData = await statsRes.json();
+        setStats(statsData);
+      }
 
       const usersRes = await fetch(`${API_URL}/api/admin/users`, { headers });
-      const usersData = await usersRes.json();
-      setUsers(usersData);
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        if (Array.isArray(usersData)) setUsers(usersData);
+      }
 
       const ordersRes = await fetch(`${API_URL}/api/admin/orders`, { headers });
-      const ordersData = await ordersRes.json();
-      setOrders(ordersData);
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        if (Array.isArray(ordersData)) setOrders(ordersData);
+      }
 
       const productsRes = await fetch(`${API_URL}/api/products`);
-      const productsData = await productsRes.json();
-      setProducts(productsData);
+      if (productsRes.ok) {
+        const productsData = await productsRes.json();
+        if (Array.isArray(productsData)) setProducts(productsData);
+      }
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
