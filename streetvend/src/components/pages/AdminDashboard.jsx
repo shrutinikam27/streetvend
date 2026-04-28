@@ -118,8 +118,15 @@ const AdminDashboard = () => {
       if (response.ok) {
         setUsers([...users, { ...data.user, createdAt: new Date().toISOString() }]);
         setCreatingUser(false);
+        
+        // Auto-generate mailto link to send credentials securely
+        const subject = encodeURIComponent("Welcome to StreetVend! Your Supplier Account is Ready");
+        const mailBody = encodeURIComponent(`Hello ${newUser.name},\n\nYour supplier account has been successfully verified and approved by our team!\n\nYou can log into your Supplier Dashboard directly using the link below:\nhttps://streetvend-web.vercel.app/login\n\nLogin ID: ${newUser.email}\nTemporary Password: ${newUser.password}\n\nFor security reasons, please do not share these credentials with anyone.\n\nBest Regards,\nThe StreetVend Admin Team`);
+        
+        window.location.href = `mailto:${newUser.email}?subject=${subject}&body=${mailBody}`;
+        
         setNewUser({ name: '', email: '', password: '', userType: 'supplier' });
-        alert('User created successfully');
+        alert('Supplier created successfully! Opening your email client to securely send them their password...');
       } else {
         alert(data.message || 'Failed to create user');
       }

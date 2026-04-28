@@ -13,9 +13,24 @@ const router = express.Router();
 const ensureDB = async () => {
     if (mongoose.connection.readyState === 1) return true;
     
+    // If it's fully disconnected, manually trigger connection
+    if (mongoose.connection.readyState === 0) {
+        console.log('Database disconnected, actively connecting...');
+        try {
+            await mongoose.connect(process.env.MONGO_URI, { 
+                serverSelectionTimeoutMS: 5000,
+                connectTimeoutMS: 10000,
+            });
+            return true;
+        } catch (e) {
+            console.error('Failed to connect to database in ensureDB:', e);
+            return false;
+        }
+    }
+    
     console.log('Waiting for database connection...');
-    // Wait for up to 5 seconds for the connection to be established
-    for (let i = 0; i < 10; i++) {
+    // Wait for up to 10 seconds for the connection to be established (if readyState is 2 - connecting)
+    for (let i = 0; i < 20; i++) {
         if (mongoose.connection.readyState === 1) return true;
         await new Promise(resolve => setTimeout(resolve, 500));
     }
