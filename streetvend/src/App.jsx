@@ -6,6 +6,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import HomePage from "./components/pages/homepage";
 import Login from "./components/pages/Login";
 import Signup from "./components/pages/Signup";
+import ForgotPassword from "./components/pages/ForgotPassword";
 import FindSuppliers from "./components/pages/FindSupplier";
 import BecomeSupplier from "./components/pages/BecomeSupplier";
 import VendorDashboard from "./components/pages/VendorDashboard";
@@ -43,6 +44,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
           {/* Protected Routes */}
           <Route path="/find-suppliers" element={<ProtectedRoute><FindSuppliers /></ProtectedRoute>} />

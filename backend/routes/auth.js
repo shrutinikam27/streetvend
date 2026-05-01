@@ -206,6 +206,41 @@ router.post('/login', [
     }
 });
 
+// Forgot password route (Mock)
+router.post('/forgot-password', [
+    body('email').isEmail().normalizeEmail()
+], async (req, res) => {
+    console.log('Forgot password attempt for:', req.body.email);
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { email } = req.body;
+
+        if (!(await ensureDB())) {
+            return res.status(503).json({ message: 'Database is connecting. Please try again.' });
+        }
+
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            // For security, it's often better to say "If email exists, a link was sent", 
+            // but for user feedback in this app, we'll give a direct error:
+            return res.status(400).json({ message: 'No account found with that email address.' });
+        }
+
+        // Mock email sending
+        console.log(`Mock email sent to ${email} for password reset.`);
+
+        res.json({ message: 'Password reset link sent to your email.' });
+    } catch (error) {
+        console.error('SERVER FORGOT PASSWORD ERROR:', error);
+        res.status(500).json({ message: 'Server error', details: error.message });
+    }
+});
+
 // @route   GET api/auth/suppliers
 // @desc    Get all suppliers
 // @access  Public

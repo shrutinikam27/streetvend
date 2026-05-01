@@ -1,46 +1,38 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Link } from "react-router-dom";
-import { useAuth } from '../../context/AuthContext';
-import API_URL from '../../config';
+import { Link } from 'react-router-dom';
 
-const Login = () => {
+const ForgotPassword = () => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const navigate = useNavigate();
-  const { login } = useAuth();
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setMessage('');
+    setLoading(true);
+
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
       });
+
       const data = await response.json();
+
       if (response.ok) {
-        login(data.token, data.user);
-        alert('Login successful!');
-        
-        // Redirect to respective dashboard based on user type
-        if (data.user.userType === 'admin') {
-          navigate('/admin-dashboard');
-        } else if (data.user.userType === 'supplier') {
-          navigate('/supplier-dashboard');
-        } else if (data.user.userType === 'vendor') {
-          navigate('/vendor-dashboard');
-        } else {
-          navigate('/');
-        }
+        setMessage(data.message || 'Password reset link sent to your email.');
+        setEmail('');
       } else {
-        alert(data.message || 'Login failed');
+        setError(data.message || data.errors?.[0]?.msg || 'Failed to process request.');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('An error occurred during login');
+    } catch (err) {
+      console.error('Forgot password error:', err);
+      setError('An error occurred. Please check your connection.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,7 +67,7 @@ const Login = () => {
         `}
       </style>
 
-      {/* Deeply Animated Background Layers - Light appetizing colors */}
+      {/* Deeply Animated Background Layers */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-orange-300/40 rounded-none mix-blend-multiply filter blur-[80px] animate-[spin_20s_linear_infinite] origin-bottom-right rotate-45"></div>
         <div className="absolute top-[30%] right-[-20%] w-[50vw] h-[50vw] bg-yellow-300/40 rounded-none mix-blend-multiply filter blur-[80px] animate-[spin_25s_linear_infinite_reverse] origin-top-left rotate-12"></div>
@@ -93,22 +85,39 @@ const Login = () => {
           <div className="md:w-5/12 bg-orange-500/10 p-10 flex flex-col items-center justify-center border-b-2 md:border-b-0 md:border-r-2 border-white/80 relative z-10">
             <div className="w-24 h-24 mx-auto bg-gradient-to-tr from-orange-400 to-orange-600 rounded-none flex items-center justify-center shadow-[6px_6px_0px_0px_rgba(249,115,22,0.4)] animate-float-icon">
               <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
             </div>
             <h2 className="mt-10 text-4xl font-black text-gray-900 tracking-tight uppercase text-center leading-tight">
-              Welcome<br/>Back
+              Reset<br/>Password
             </h2>
             <div className="w-12 h-1 bg-orange-500 mt-6 mb-4"></div>
             <p className="text-sm text-gray-600 font-bold uppercase tracking-wider text-center">
-              StreetVend Portal
+              Account Recovery
             </p>
           </div>
 
           {/* Right Side: Form */}
           <div className="md:w-7/12 p-8 sm:p-12 relative z-10 flex flex-col justify-center">
+            
+            {error && (
+              <div className="mb-6 bg-red-100 border-l-4 border-red-500 text-red-700 p-4 font-bold uppercase text-xs tracking-wider" role="alert">
+                <p>{error}</p>
+              </div>
+            )}
+            
+            {message && (
+              <div className="mb-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 font-bold uppercase text-xs tracking-wider" role="alert">
+                <p>{message}</p>
+              </div>
+            )}
+
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="space-y-5">
+                <p className="text-gray-600 text-sm font-semibold mb-4">
+                  Enter the email address associated with your account and we'll send you a link to reset your password.
+                </p>
+
                 <div className="group/input relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-transform duration-300 group-focus-within/input:scale-110">
                     <svg className="h-5 w-5 text-gray-400 group-focus-within/input:text-orange-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -126,55 +135,21 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
-                
-                <div className="group/input relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-transform duration-300 group-focus-within/input:scale-110">
-                    <svg className="h-5 w-5 text-gray-400 group-focus-within/input:text-orange-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                  </div>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    required
-                    className="block w-full pl-11 pr-4 py-4 bg-white/70 border-2 border-white rounded-none text-gray-900 placeholder-gray-500 font-semibold focus:outline-none focus:border-orange-500 focus:bg-white transition-all duration-300 shadow-[4px_4px_0px_0px_rgba(249,115,22,0.1)]"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-2 border-gray-300 rounded-none bg-white cursor-pointer transition-colors"
-                  />
-                  <label htmlFor="remember-me" className="ml-2 block text-xs font-bold uppercase tracking-wide text-gray-700 cursor-pointer">
-                    Remember me
-                  </label>
-                </div>
-                <Link to="/forgot-password" className="text-xs font-black uppercase tracking-wide text-orange-600 hover:text-orange-500 transition-colors">
-                  Forgot password?
-                </Link>
               </div>
 
               <button
                 type="submit"
-                className="relative mt-4 w-full flex justify-center py-4 px-4 border-2 border-transparent text-sm font-black uppercase tracking-widest rounded-none text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-white overflow-hidden group transition-all duration-300 transform hover:-translate-y-1 shadow-[6px_6px_0px_0px_rgba(249,115,22,0.4)] hover:shadow-[8px_8px_0px_0px_rgba(249,115,22,0.5)]"
+                disabled={loading}
+                className="relative mt-8 w-full flex justify-center py-4 px-4 border-2 border-transparent text-sm font-black uppercase tracking-widest rounded-none text-white bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 focus:ring-offset-white overflow-hidden group transition-all duration-300 transform hover:-translate-y-1 shadow-[6px_6px_0px_0px_rgba(249,115,22,0.4)] hover:shadow-[8px_8px_0px_0px_rgba(249,115,22,0.5)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
               >
-                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></span>
-                <span className="relative">Sign In</span>
+                {!loading && <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></span>}
+                <span className="relative">{loading ? 'Sending...' : 'Send Reset Link'}</span>
               </button>
 
               <p className="text-center text-xs font-bold uppercase tracking-wide text-gray-600 mt-8">
-                Don't have an account?{' '}
-                <Link to="/signup" className="font-black text-orange-600 hover:text-orange-500 transition-colors underline decoration-2 underline-offset-4">
-                  Create one now
+                Remember your password?{' '}
+                <Link to="/login" className="font-black text-orange-600 hover:text-orange-500 transition-colors underline decoration-2 underline-offset-4">
+                  Back to Login
                 </Link>
               </p>
             </form>
@@ -185,4 +160,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;
