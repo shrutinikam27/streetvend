@@ -24,7 +24,18 @@ const ForgotPassword = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(data.message || 'Password reset link sent to your email.');
+        if (data.previewUrl) {
+          setMessage(
+            <div className="flex flex-col gap-2">
+              <p>{data.message || 'Password reset link sent to your email.'}</p>
+              <a href={data.previewUrl} target="_blank" rel="noreferrer" className="underline font-bold text-orange-600 hover:text-orange-700">
+                View Test Email ↗
+              </a>
+            </div>
+          );
+        } else {
+          setMessage(data.message || 'Password reset link sent to your email.');
+        }
         setEmail('');
       } else {
         setError(data.message || data.errors?.[0]?.msg || 'Failed to process request.');

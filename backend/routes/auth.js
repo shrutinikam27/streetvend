@@ -231,8 +231,56 @@ router.post('/forgot-password', [
             return res.status(400).json({ message: 'No account found with that email address.' });
         }
 
-        // Mock email sending
-        console.log(`Mock email sent to ${email} for password reset.`);
+        const nodemailer = require('nodemailer');
+        
+        let transporter;
+        if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+            transporter = nodemailer.createTransport({
+                host: process.env.SMTP_HOST,
+                port: process.env.SMTP_PORT || 587,
+                secure: process.env.SMTP_SECURE === 'true',
+                auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS
+                }
+            });
+        } else {
+            console.log('No SMTP config found, using Ethereal test account...');
+            let testAccount = await nodemailer.createTestAccount();
+            transporter = nodemailer.createTransport({
+                host: "smtp.ethereal.email",
+                port: 587,
+                secure: false,
+                auth: {
+                    user: testAccount.user,
+                    pass: testAccount.pass,
+                },
+            });
+        }
+
+        const resetToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const resetUrl = `http://localhost:5173/reset-password?token=${resetToken}`;
+
+        const mailOptions = {
+            from: '"StreetVend Portal" <noreply@streetvend.com>',
+            to: email,
+            subject: 'Password Reset Request',
+            text: `You requested a password reset. Please click the link to reset your password: ${resetUrl}`,
+            html: `<p>You requested a password reset.</p><p>Please click the link below to reset your password:</p><a href="${resetUrl}">${resetUrl}</a>`
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        
+        console.log("Message sent: %s", info.messageId);
+        
+        const previewUrl = nodemailer.getTestMessageUrl(info);
+        if (previewUrl) {
+            console.log("Preview URL: %s", previewUrl);
+            return res.json({ 
+                message: 'Password reset link sent to your email.', 
+                previewUrl: previewUrl
+            });
+        }
 
         res.json({ message: 'Password reset link sent to your email.' });
     } catch (error) {
