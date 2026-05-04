@@ -1,837 +1,430 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import {
-    FaHome, FaShoppingCart, FaBox, FaTruck, FaChartLine,
-    FaUser, FaCog, FaBell, FaSearch, FaBars, FaTimes,
-    FaPlus, FaChevronDown, FaRupeeSign, FaRegClock, FaCheckCircle
+    FaLayerGroup, FaSearch, FaShoppingCart, FaBoxOpen, FaChartBar, FaUserCircle,
+    FaBell, FaSignOutAlt, FaPlus, FaMinus, FaTrash, FaTruck, FaRupeeSign,
+    FaChevronRight, FaFilter, FaArrowUp, FaArrowDown, FaBars, FaMapMarkerAlt
 } from 'react-icons/fa';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler } from 'chart.js';
+import { Bar, Line, Pie } from 'react-chartjs-2';
 import API_URL from '../../config';
+import LiveMap from '../common/LiveMap';
+import { useTracking } from '../../hooks/useTracking';
+
+// Register ChartJS components
+ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, Filler);
 
 const VendorDashboard = () => {
+    const { user, logout } = useAuth();
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [cart, setCart] = useState([]);
+    const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
-    const [inventory, setInventory] = useState([]);
-    const [stats, setStats] = useState({
-        dailySales: 0,
-        pendingOrders: 0,
-        stockAlerts: 0,
-        customerRating: 0
-    });
+    const [trackingOrderId, setTrackingOrderId] = useState(null);
+    const [deliveryAddress, setDeliveryAddress] = useState('');
 
-    // Initialize with real data from backend
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const ordersRes = await fetch(`${API_URL}/api/orders`);
+    const { othersLocations } = useTracking(trackingOrderId, false);
+
+    // Fetch Products & Orders
+    const fetchData = async () => {
+        try {
+            const productsRes = await fetch(`${API_URL}/api/products`);
+            const productsData = await productsRes.json();
+            setProducts(productsData || []);
+
+            if (user?.name) {
+                const ordersRes = await fetch(`${API_URL}/api/orders?vendor=${encodeURIComponent(user.name)}`);
                 const ordersData = await ordersRes.json();
-                const inventoryRes = await fetch(`${API_URL}/api/inventory`);
-                const inventoryData = await inventoryRes.json();
-
-                const orders = ordersData.orders || [
-                    { id: '101', customer: 'Rahul Sharma', items: 'Vada Pav (50)', amount: 1500, status: 'delivered', time: '10:30 AM' },
-                    { id: '102', customer: 'Amit Patel', items: 'Samosa (100)', amount: 2500, status: 'preparing', time: '11:15 AM' },
-                    { id: '103', customer: 'Sneha Gupta', items: 'Pav Bhaji (20)', amount: 1800, status: 'pending', time: '12:00 PM' }
-                ];
-                const inventory = inventoryData.inventory || [
-                    { id: 1, name: 'Onions', stock: 5, unit: 'kg', alert: true },
-                    { id: 2, name: 'Potatoes', stock: 12, unit: 'kg', alert: false },
-                    { id: 3, name: 'Cooking Oil', stock: 3, unit: 'liters', alert: true },
-                    { id: 4, name: 'Paneer', stock: 2, unit: 'kg', alert: true }
-                ];
-
-                // Calculate stats
-                const dailySales = orders.reduce((sum, order) => order.status === 'delivered' ? sum + order.amount : sum, 0);
-                const pendingOrders = orders.filter(order => order.status !== 'delivered').length;
-                const stockAlerts = inventory.filter(item => item.alert).length;
-
-                setOrders(orders);
-                setInventory(inventory);
-                setStats({
-                    dailySales,
-                    pendingOrders,
-                    stockAlerts,
-                    customerRating: 4.7
-                });
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                // Fallback to mock data on error
-                const mockOrders = [
-                    { id: '101', customer: 'Rahul Sharma', items: 'Vada Pav (50)', amount: 1500, status: 'delivered', time: '10:30 AM' },
-                    { id: '102', customer: 'Amit Patel', items: 'Samosa (100)', amount: 2500, status: 'preparing', time: '11:15 AM' }
-                ];
-                const mockInventory = [
-                    { id: 1, name: 'Onions', stock: 5, unit: 'kg', alert: true },
-                    { id: 2, name: 'Cooking Oil', stock: 3, unit: 'liters', alert: true }
-                ];
-                setOrders(mockOrders);
-                setInventory(mockInventory);
-                setStats({ dailySales: 1500, pendingOrders: 1, stockAlerts: 2, customerRating: 4.7 });
+                setOrders(ordersData.orders || []);
             }
-        };
-        fetchData();
-    }, []);
-
-    // Toggle sidebar on mobile
-    const toggleSidebar = () => {
-        setSidebarOpen(!sidebarOpen);
+        } catch (err) {
+            console.error('Fetch error:', err);
+        }
     };
 
+    useEffect(() => {
+        fetchData();
+    }, [user]);
+
+    const addToCart = (product) => {
+        setCart(prev => {
+            const existing = prev.find(item => item._id === product._id);
+            if (existing) {
+                return prev.map(item => item._id === product._id ? { ...item, qty: item.qty + 1 } : item);
+            }
+            return [...prev, { ...product, qty: 1 }];
+        });
+    };
+
+    const removeFromCart = (id) => setCart(prev => prev.filter(item => item._id !== id));
+    const updateQty = (id, delta) => {
+        setCart(prev => prev.map(item => item._id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item));
+    };
+
+    const handleCheckout = async () => {
+        if (cart.length === 0) return;
+        
+        // Group cart by supplier
+        const ordersBySupplier = {};
+        cart.forEach(item => {
+            const sId = item.supplierId || item.supplier?.id || item.supplier?._id || 'unknown';
+            if (!ordersBySupplier[sId]) ordersBySupplier[sId] = { items: [], total: 0 };
+            ordersBySupplier[sId].items.push({
+                product: item.name,
+                quantity: item.qty,
+                price: item.price,
+                total: item.price * item.qty
+            });
+            ordersBySupplier[sId].total += item.price * item.qty;
+        });
+
+        try {
+            for (const [supplierId, orderData] of Object.entries(ordersBySupplier)) {
+                await fetch(`${API_URL}/api/orders`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vendor: user?.name || 'Vendor',
+                        supplierId: supplierId === 'unknown' ? null : supplierId,
+                        orderDate: new Date(),
+                        deliveryDate: new Date(Date.now() + 86400000 * 2), // 2 days from now
+                        address: deliveryAddress || 'Address not provided',
+                        status: 'pending',
+                        items: orderData.items,
+                        totalAmount: orderData.total + 150 // Including logistics
+                    })
+                });
+            }
+            alert('Orders placed successfully!');
+            setCart([]);
+            fetchData();
+            setActiveTab('orders');
+        } catch (err) {
+            console.error('Error placing order:', err);
+            alert('Failed to place order');
+        }
+    };
+
+    const handleDeleteOrder = async (orderId) => {
+        try {
+            const res = await fetch(`${API_URL}/api/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            if (res.ok) {
+                alert('Order cancelled successfully!');
+                fetchData();
+            } else {
+                alert('Failed to cancel order');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Network error while cancelling order');
+        }
+    };
+
+    const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+
     return (
-        <div className="flex min-h-screen bg-gray-50">
-            {/* Sidebar - Hidden on mobile by default */}
-            <div
-                className={`fixed inset-y-0 left-0 z-30 w-64 bg-gradient-to-b from-orange-600 to-orange-800 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:transform-none ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
-            >
-                <div className="p-6 border-b border-orange-500">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-lg">
-                            <div className="bg-gray-200 border-2 border-dashed rounded-xl w-10 h-10" />
-                        </div>
-                        <div>
-                            <h1 className="font-bold text-xl">Satara Food Street</h1>
-                            <p className="text-orange-200 text-sm">Satara, Maharashtra</p>
-                        </div>
+        <div className="flex h-screen bg-[#0f172a] text-slate-200 overflow-hidden font-sans">
+            {/* Sidebar */}
+            <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} bg-[#1e293b] border-r border-slate-800 transition-all duration-300 flex flex-col z-50`}>
+                <div className="p-6 flex items-center gap-4 border-b border-slate-800 h-20">
+                    <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20">
+                        <FaShoppingCart className="text-white text-xl" />
                     </div>
+                    {sidebarOpen && <h1 className="font-black text-xl tracking-tighter text-white whitespace-nowrap">StreetVend <span className="text-orange-500 text-[10px] uppercase tracking-widest block font-bold mt-[-4px]">Marketplace</span></h1>}
                 </div>
 
-                <nav className="p-4 mt-4">
-                    <NavItem
-                        icon={<FaHome />}
-                        label="Dashboard"
-                        active={activeTab === 'dashboard'}
-                        onClick={() => setActiveTab('dashboard')}
-                    />
-                    <NavItem
-                        icon={<FaShoppingCart />}
-                        label="Orders"
-                        active={activeTab === 'orders'}
-                        onClick={() => setActiveTab('orders')}
-                    />
-                    <NavItem
-                        icon={<FaBox />}
-                        label="Inventory"
-                        active={activeTab === 'inventory'}
-                        onClick={() => setActiveTab('inventory')}
-                    />
-                    <NavItem
-                        icon={<FaTruck />}
-                        label="Suppliers"
-                        active={activeTab === 'suppliers'}
-                        onClick={() => setActiveTab('suppliers')}
-                    />
-                    <NavItem
-                        icon={<FaChartLine />}
-                        label="Analytics"
-                        active={activeTab === 'analytics'}
-                        onClick={() => setActiveTab('analytics')}
-                    />
-                    <div className="mt-8 pt-4 border-t border-orange-500">
-                        <NavItem
-                            icon={<FaUser />}
-                            label="Profile"
-                            active={activeTab === 'profile'}
-                            onClick={() => setActiveTab('profile')}
-                        />
-                        <NavItem
-                            icon={<FaCog />}
-                            label="Settings"
-                            active={activeTab === 'settings'}
-                            onClick={() => setActiveTab('settings')}
-                        />
-                    </div>
+                <nav className="flex-1 p-4 space-y-2 mt-4 overflow-y-auto">
+                    <SidebarLink icon={<FaSearch />} label="Search Products" active={activeTab === 'products'} onClick={() => setActiveTab('products')} open={sidebarOpen} />
+                    <SidebarLink icon={<FaShoppingCart />} label="Cart" active={activeTab === 'cart'} onClick={() => setActiveTab('cart')} open={sidebarOpen} badge={cart.length} />
+                    <SidebarLink icon={<FaBoxOpen />} label="Orders" active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} open={sidebarOpen} />
+                    <SidebarLink icon={<FaChartBar />} label="Analytics" active={activeTab === 'analytics'} onClick={() => setActiveTab('analytics')} open={sidebarOpen} />
+                    <SidebarLink icon={<FaUserCircle />} label="Profile" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} open={sidebarOpen} />
                 </nav>
-            </div>
 
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Top Bar */}
-                <header className="bg-white shadow-sm z-20">
-                    <div className="px-4 sm:px-6 lg:px-8 py-4">
-                        <div className="flex items-center justify-between">
-                            {/* Mobile menu button */}
-                            <div className="flex items-center">
-                                <button
-                                    className="lg:hidden mr-4 text-gray-600 focus:outline-none"
-                                    onClick={toggleSidebar}
-                                >
-                                    {sidebarOpen ? <FaTimes size={20} /> : <FaBars size={20} />}
-                                </button>
-                                <h1 className="text-xl font-bold text-gray-800 capitalize">{activeTab}</h1>
+                <div className="p-4 border-t border-slate-800">
+                    <button onClick={logout} className="w-full flex items-center gap-4 p-3 text-slate-400 hover:text-rose-500 hover:bg-rose-500/5 rounded-xl transition-all font-bold">
+                        <FaSignOutAlt className="text-xl flex-shrink-0" />
+                        {sidebarOpen && <span>Sign Out</span>}
+                    </button>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col overflow-hidden relative">
+                {/* Top Navbar */}
+                <header className="h-20 bg-[#1e293b]/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-8 z-40">
+                    <div className="flex items-center gap-4 flex-1">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800/50 rounded-lg lg:block hidden">
+                            <FaBars className={sidebarOpen ? 'rotate-90' : ''} />
+                        </button>
+                        <div className="relative max-w-md w-full hidden md:block">
+                            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                            <input type="text" placeholder="Search resources, suppliers, batches..." className="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-2.5 pl-12 pr-4 outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/5 transition-all text-sm" />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-6">
+                        <div className="relative p-2.5 text-slate-400 hover:text-orange-500 transition-all bg-slate-800/50 rounded-xl cursor-pointer">
+                            <FaBell size={18} />
+                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse ring-2 ring-slate-900"></span>
+                        </div>
+                        <div className="h-8 w-px bg-slate-800"></div>
+                        <div className="flex items-center gap-3 bg-slate-800/30 p-1.5 pr-4 rounded-xl border border-slate-800/50">
+                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center font-black text-white shadow-lg shadow-orange-500/10">
+                                {user?.name ? user.name[0] : 'V'}
                             </div>
-
-                            <div className="flex items-center space-x-4">
-                                <div className="relative hidden md:block">
-                                    <input
-                                        type="text"
-                                        placeholder="Search..."
-                                        className="pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    />
-                                    <FaSearch className="absolute left-3 top-3 text-gray-400" />
-                                </div>
-
-                                <button className="p-2 text-gray-600 hover:text-orange-600 relative">
-                                    <FaBell size={18} />
-                                    <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
-                                </button>
-
-                                <div className="flex items-center">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
-                                        <span className="text-white font-bold text-xs">SV</span>
-                                    </div>
-                                    <span className="ml-2 hidden sm:inline text-gray-700">Satara Vendor</span>
-                                </div>
+                            <div className="hidden sm:block">
+                                <p className="text-xs font-black text-white leading-none">{user?.name || 'Vendor'}</p>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Verified Partner</p>
                             </div>
                         </div>
                     </div>
                 </header>
 
-                {/* Main Content Area */}
-                <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gray-50">
-                    {activeTab === 'dashboard' && <DashboardTab stats={stats} orders={orders} />}
-                    {activeTab === 'orders' && <OrdersTab orders={orders} />}
-                    {activeTab === 'inventory' && <InventoryTab inventory={inventory} />}
-                    {activeTab === 'suppliers' && <SuppliersTab />}
-                    {activeTab === 'analytics' && <AnalyticsTab />}
-                    {activeTab === 'profile' && <ProfileTab />}
-                    {activeTab === 'settings' && <SettingsTab />}
+                {/* Dashboard Content */}
+                <main className="flex-1 overflow-y-auto p-8 bg-[#0f172a] custom-scrollbar">
+                    {activeTab === 'dashboard' && <DashboardOverview products={products} orders={orders} />}
+                    {activeTab === 'products' && <ProductListing products={products} onAdd={addToCart} />}
+                    {activeTab === 'cart' && <CartPage cart={cart} updateQty={updateQty} onRemove={removeFromCart} total={cartTotal} onCheckout={handleCheckout} address={deliveryAddress} setAddress={setDeliveryAddress} />}
+                    {activeTab === 'orders' && <OrdersPage orders={orders} trackingOrderId={trackingOrderId} setTrackingOrderId={setTrackingOrderId} othersLocations={othersLocations} onDelete={handleDeleteOrder} />}
+                    {activeTab === 'analytics' && <AnalyticsPage />}
+                    {activeTab === 'profile' && <ProfilePage user={user} />}
                 </main>
             </div>
         </div>
     );
 };
 
-// Dashboard Tab Component
-const DashboardTab = ({ stats, orders }) => {
-    return (
-        <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <StatCard
-                    icon={<FaRupeeSign />}
-                    title="Daily Sales"
-                    value={`₹${stats.dailySales}`}
-                    change="+12% from yesterday"
-                    color="bg-green-100 text-green-600"
-                />
+// --- Sub-Components ---
 
-                <StatCard
-                    icon={<FaShoppingCart />}
-                    title="Pending Orders"
-                    value={stats.pendingOrders}
-                    change="3 orders to fulfill"
-                    color="bg-yellow-100 text-yellow-600"
-                />
-
-                <StatCard
-                    icon={<FaBox />}
-                    title="Stock Alerts"
-                    value={stats.stockAlerts}
-                    change="Items need restocking"
-                    color="bg-red-100 text-red-600"
-                />
-
-                <StatCard
-                    icon={<FaUser />}
-                    title="Customer Rating"
-                    value={stats.customerRating}
-                    change="Based on 45 reviews"
-                    color="bg-blue-100 text-blue-600"
-                    isRating={true}
-                />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div className="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-lg font-semibold text-gray-800">Recent Orders</h2>
-                        <button className="text-orange-600 text-sm font-medium flex items-center gap-1">
-                            View All <FaChevronDown className="text-xs" />
-                        </button>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                        <table className="w-full">
-                            <thead>
-                                <tr className="text-left text-gray-500 text-sm border-b">
-                                    <th className="pb-3">Order ID</th>
-                                    <th className="pb-3">Customer</th>
-                                    <th className="pb-3">Items</th>
-                                    <th className="pb-3">Amount</th>
-                                    <th className="pb-3">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {orders.slice(0, 4).map(order => (
-                                    <tr key={order.id} className="border-b hover:bg-gray-50">
-                                        <td className="py-4">#{order.id}</td>
-                                        <td className="py-4 font-medium">{order.customer}</td>
-                                        <td className="py-4">{order.items}</td>
-                                        <td className="py-4 font-medium">₹{order.amount}</td>
-                                        <td className="py-4">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${order.status === 'delivered'
-                                                ? 'bg-green-100 text-green-700'
-                                                : order.status === 'preparing'
-                                                    ? 'bg-yellow-100 text-yellow-700'
-                                                    : 'bg-red-100 text-red-700'
-                                                }`}>
-                                                {order.status}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-6">Inventory Alerts</h2>
-
-                    <div className="space-y-4">
-                        <InventoryAlertItem
-                            name="Onions"
-                            stock={5}
-                            unit="kg"
-                            critical={true}
-                        />
-
-                        <InventoryAlertItem
-                            name="Paneer"
-                            stock={2}
-                            unit="kg"
-                            critical={true}
-                        />
-
-                        <InventoryAlertItem
-                            name="Cooking Oil"
-                            stock={3}
-                            unit="liters"
-                            critical={false}
-                        />
-
-                        <button className="w-full mt-4 py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center justify-center gap-2">
-                            <FaPlus /> Order Supplies
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2 className="text-lg font-semibold text-gray-800 mb-6">Daily Sales Trend</h2>
-                <div className="h-64 bg-gradient-to-br from-orange-50 to-white rounded-lg flex items-center justify-center border border-orange-100">
-                    <div className="text-center text-orange-500">
-                        <FaChartLine className="text-4xl mx-auto mb-3" />
-                        <p>Sales trend visualization</p>
-                        <p className="text-sm mt-2">Daily sales performance chart</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Orders Tab Component
-const OrdersTab = ({ orders }) => {
-    const [filter, setFilter] = useState('all');
-
-    const filteredOrders = filter === 'all'
-        ? orders
-        : orders.filter(order => order.status === filter);
-
-    return (
-        <div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h2 className="text-xl font-bold text-gray-800">Manage Orders</h2>
-
-                <div className="flex flex-wrap gap-2">
-                    <button
-                        className={`px-4 py-2 rounded-lg ${filter === 'all' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                        onClick={() => setFilter('all')}
-                    >
-                        All Orders
-                    </button>
-                    <button
-                        className={`px-4 py-2 rounded-lg ${filter === 'pending' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                        onClick={() => setFilter('pending')}
-                    >
-                        Pending
-                    </button>
-                    <button
-                        className={`px-4 py-2 rounded-lg ${filter === 'preparing' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                        onClick={() => setFilter('preparing')}
-                    >
-                        Preparing
-                    </button>
-                    <button
-                        className={`px-4 py-2 rounded-lg ${filter === 'delivered' ? 'bg-orange-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-                        onClick={() => setFilter('delivered')}
-                    >
-                        Delivered
-                    </button>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full min-w-full">
-                        <thead>
-                            <tr className="bg-gray-50 text-left text-gray-500 text-sm">
-                                <th className="py-3 px-4">Order #</th>
-                                <th className="py-3 px-4">Customer</th>
-                                <th className="py-3 px-4">Items</th>
-                                <th className="py-3 px-4">Amount</th>
-                                <th className="py-3 px-4">Time</th>
-                                <th className="py-3 px-4">Status</th>
-                                <th className="py-3 px-4">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredOrders.map(order => (
-                                <tr key={order.id} className="border-b hover:bg-gray-50">
-                                    <td className="py-4 px-4 font-medium">#{order.id}</td>
-                                    <td className="py-4 px-4">{order.customer}</td>
-                                    <td className="py-4 px-4">{order.items}</td>
-                                    <td className="py-4 px-4 font-medium">₹{order.amount}</td>
-                                    <td className="py-4 px-4 text-gray-500">{order.time}</td>
-                                    <td className="py-4 px-4">
-                                        <span className={`px-2 py-1 rounded-full text-xs ${order.status === 'delivered'
-                                            ? 'bg-green-100 text-green-700'
-                                            : order.status === 'preparing'
-                                                ? 'bg-yellow-100 text-yellow-700'
-                                                : 'bg-red-100 text-red-700'
-                                            }`}>
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4">
-                                        <button className="text-orange-600 hover:text-orange-800 font-medium text-sm">
-                                            View Details
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {filteredOrders.length === 0 && (
-                    <div className="text-center py-12">
-                        <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-                            <FaShoppingCart className="text-gray-500 text-xl" />
-                        </div>
-                        <p className="text-gray-500">No orders found</p>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-};
-
-// Inventory Tab Component
-const InventoryTab = ({ inventory }) => {
-    return (
-        <div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h2 className="text-xl font-bold text-gray-800">Inventory Management</h2>
-
-                <div className="flex gap-4">
-                    <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2">
-                        <FaFilter /> Filter
-                    </button>
-                    <button className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center gap-2">
-                        <FaPlus /> Add Item
-                    </button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {inventory.map(item => (
-                    <div key={item.id} className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-100 hover:shadow-md transition">
-                        <div className="p-6">
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <h3 className="font-bold text-lg text-gray-800">{item.name}</h3>
-                                    <p className="text-gray-500 text-sm">Current stock</p>
-                                </div>
-                                {item.alert && (
-                                    <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs">
-                                        Low Stock
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="text-3xl font-bold mb-2">
-                                {item.stock} <span className="text-lg font-normal text-gray-500">{item.unit}</span>
-                            </div>
-
-                            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                                <div
-                                    className={`h-2.5 rounded-full ${item.stock > 5 ? 'bg-green-500' : item.stock > 2 ? 'bg-yellow-500' : 'bg-red-500'
-                                        }`}
-                                    style={{ width: `${Math.min(100, (item.stock / 10) * 100)}%` }}
-                                ></div>
-                            </div>
-
-                            <div className="flex gap-2">
-                                <button className="flex-1 bg-gray-100 text-gray-700 py-2 rounded-lg hover:bg-gray-200">
-                                    Edit
-                                </button>
-                                <button className="flex-1 bg-orange-100 text-orange-700 py-2 rounded-lg hover:bg-orange-200">
-                                    Order More
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                ))}
-
-                <div className="bg-gradient-to-br from-orange-50 to-white border-2 border-dashed border-orange-300 rounded-xl flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-orange-100 transition">
-                    <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
-                        <FaPlus />
-                    </div>
-                    <h3 className="font-medium text-orange-700">Add New Item</h3>
-                    <p className="text-gray-500 text-sm mt-1">Add a new item to your inventory</p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Suppliers Tab Component
-const SuppliersTab = () => {
-    const suppliers = [
-        { id: 1, name: 'Fresh Agro Supplies', rating: 4.8, delivery: 'Same Day', products: ['Vegetables', 'Fruits'] },
-        { id: 2, name: 'Mumbai Dairy Products', rating: 4.5, delivery: 'Next Day', products: ['Milk', 'Paneer', 'Cheese'] },
-        { id: 3, name: 'Spice Traders', rating: 4.7, delivery: 'Same Day', products: ['Spices', 'Masalas'] },
-        { id: 4, name: 'Quality Grains Co.', rating: 4.3, delivery: 'Next Day', products: ['Rice', 'Wheat', 'Flour'] },
-    ];
-
-    return (
-        <div>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h2 className="text-xl font-bold text-gray-800">Suppliers</h2>
-
-                <div className="flex gap-4">
-                    <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg flex items-center gap-2">
-                        <FaFilter /> Filter
-                    </button>
-                    <button className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg flex items-center gap-2">
-                        <FaPlus /> New Supplier
-                    </button>
-                </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {suppliers.map(supplier => (
-                    <div key={supplier.id} className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center">
-                                <span className="text-white font-bold">{supplier.name.charAt(0)}</span>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-gray-800">{supplier.name}</h3>
-                                <div className="flex items-center gap-1">
-                                    <span className="text-yellow-500 font-medium">{supplier.rating}</span>
-                                    <div className="flex">
-                                        {[...Array(5)].map((_, i) => (
-                                            <span key={i} className="text-yellow-400">
-                                                {i < Math.floor(supplier.rating) ? '★' : '☆'}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="mb-4">
-                            <p className="text-gray-500 text-sm mb-1">Delivery</p>
-                            <p className="font-medium flex items-center gap-2">
-                                <FaTruck className="text-orange-500" /> {supplier.delivery}
-                            </p>
-                        </div>
-
-                        <div className="mb-4">
-                            <p className="text-gray-500 text-sm mb-1">Products</p>
-                            <div className="flex flex-wrap gap-2">
-                                {supplier.products.map((product, idx) => (
-                                    <span key={idx} className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs">
-                                        {product}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-
-                        <button className="w-full mt-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg">
-                            Place Order
-                        </button>
-                    </div>
-                ))}
-
-                <div className="bg-gradient-to-br from-orange-50 to-white border-2 border-dashed border-orange-300 rounded-xl flex flex-col items-center justify-center p-8 text-center cursor-pointer hover:bg-orange-100 transition">
-                    <div className="w-12 h-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mb-4">
-                        <FaPlus />
-                    </div>
-                    <h3 className="font-medium text-orange-700">Add New Supplier</h3>
-                    <p className="text-gray-500 text-sm mt-1">Connect with a new supplier</p>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Analytics Tab Component
-const AnalyticsTab = () => {
-    return (
-        <div>
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Business Analytics</h2>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-semibold text-gray-800 mb-4">Sales Overview</h3>
-                    <div className="h-64 bg-gradient-to-br from-orange-50 to-white rounded-lg flex items-center justify-center border border-orange-100">
-                        <div className="text-center text-orange-500">
-                            <FaChartLine className="text-4xl mx-auto mb-3" />
-                            <p>Sales performance chart</p>
-                            <p className="text-sm mt-2">Daily, weekly and monthly sales trends</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-xl shadow-sm p-6">
-                    <h3 className="font-semibold text-gray-800 mb-4">Popular Items</h3>
-                    <div className="h-64 bg-gradient-to-br from-orange-50 to-white rounded-lg flex items-center justify-center border border-orange-100">
-                        <div className="text-center text-orange-500">
-                            <FaBox className="text-4xl mx-auto mb-3" />
-                            <p>Product popularity chart</p>
-                            <p className="text-sm mt-2">Top selling menu items</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <h3 className="font-semibold text-gray-800 mb-4">Customer Insights</h3>
-                <div className="h-96 bg-gradient-to-br from-orange-50 to-white rounded-lg flex items-center justify-center border border-orange-100">
-                    <div className="text-center text-orange-500">
-                        <FaUser className="text-4xl mx-auto mb-3" />
-                        <p>Customer demographics and behavior</p>
-                        <p className="text-sm mt-2">Peak hours, repeat customers, and feedback</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Profile Tab Component
-const ProfileTab = () => {
-    return (
-        <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Vendor Profile</h2>
-
-            <div className="bg-white rounded-xl shadow-sm p-6">
-                <div className="flex flex-col md:flex-row gap-8">
-                    <div className="md:w-1/3 flex flex-col items-center">
-                        <div className="w-32 h-32 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 flex items-center justify-center mb-4">
-                            <div className="bg-gray-200 border-2 border-dashed rounded-xl w-28 h-28" />
-                        </div>
-                        <button className="text-orange-600 font-medium">Upload Photo</button>
-                        <div className="mt-6 text-center">
-                            <h3 className="text-lg font-bold">Street Food Vendor</h3>
-                            <p className="text-gray-500">Mumbai, India</p>
-                            <div className="flex items-center justify-center mt-2 gap-1">
-                                <span className="text-yellow-500 font-medium">4.7</span>
-                                <div className="flex">
-                                    {[...Array(5)].map((_, i) => (
-                                        <span key={i} className="text-yellow-400">
-                                            ★
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="md:w-2/3">
-                        <h3 className="font-semibold text-gray-800 mb-4">Business Information</h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                            <div>
-                                <label className="block text-gray-600 text-sm mb-1">Business Name</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    value="Street Food Vendor"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-600 text-sm mb-1">Location</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    value="Mumbai, India"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-600 text-sm mb-1">Contact Number</label>
-                                <input
-                                    type="text"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    value="+91 98765 43210"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-600 text-sm mb-1">Email</label>
-                                <input
-                                    type="email"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    value="vendor@example.com"
-                                />
-                            </div>
-                        </div>
-
-                        <h3 className="font-semibold text-gray-800 mb-4">Business Hours</h3>
-                        <div className="bg-orange-50 rounded-lg p-4 mb-6">
-                            <p className="font-medium flex items-center gap-2">
-                                <FaRegClock className="text-orange-500" /> 8:00 AM - 10:00 PM, Monday to Sunday
-                            </p>
-                        </div>
-
-                        <button className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-lg shadow-lg">
-                            Save Changes
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Settings Tab Component
-const SettingsTab = () => {
-    return (
-        <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold text-gray-800 mb-6">Settings</h2>
-
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="border-b">
-                    <button className="px-6 py-4 text-left font-medium text-orange-600 border-b-2 border-orange-600">
-                        Account Settings
-                    </button>
-                </div>
-
-                <div className="p-6">
-                    <div className="mb-6">
-                        <h3 className="font-semibold text-gray-800 mb-3">Notification Preferences</h3>
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                                <span>New Order Alerts</span>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                                </label>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Stock Alerts</span>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                                </label>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <span>Promotional Offers</span>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" className="sr-only peer" />
-                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-6">
-                        <h3 className="font-semibold text-gray-800 mb-3">Security</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-gray-600 text-sm mb-1">Change Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="Enter new password"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-gray-600 text-sm mb-1">Confirm Password</label>
-                                <input
-                                    type="password"
-                                    placeholder="Confirm new password"
-                                    className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="border-t border-gray-200 pt-4">
-                        <button className="px-6 py-3 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg">
-                            Delete Account
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Reusable Components
-const NavItem = ({ icon, label, active, onClick }) => (
-    <button
-        className={`flex items-center gap-3 w-full p-3 rounded-lg mb-2 transition-all ${active ? 'bg-white text-orange-600 shadow' : 'text-orange-100 hover:bg-orange-700'
-            }`}
-        onClick={onClick}
-    >
-        {icon}
-        <span>{label}</span>
+const SidebarLink = ({ icon, label, active, onClick, open, badge }) => (
+    <button onClick={onClick} className={`w-full flex items-center gap-4 p-3.5 rounded-2xl transition-all relative group ${active ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'text-slate-400 hover:text-white hover:bg-slate-800'}`}>
+        <span className={`text-xl transition-transform duration-300 ${active ? 'scale-110' : 'group-hover:scale-110 group-hover:text-orange-400'}`}>{icon}</span>
+        {open && <span className="font-bold text-sm tracking-tight whitespace-nowrap">{label}</span>}
+        {open && badge > 0 && <span className="ml-auto bg-white/20 text-white px-2 py-0.5 rounded-lg text-[10px] font-black">{badge}</span>}
+        {!open && badge > 0 && <span className="absolute top-2 right-2 w-4 h-4 bg-orange-500 rounded-full text-[10px] flex items-center justify-center font-black">{badge}</span>}
     </button>
 );
 
-const StatCard = ({ icon, title, value, change, color, isRating }) => (
-    <div className="bg-white rounded-xl shadow-sm p-6">
-        <div className="flex justify-between items-start">
-            <div>
-                <p className="text-gray-600 mb-1">{title}</p>
-                <h3 className={`text-2xl font-bold ${isRating ? 'text-yellow-500' : 'text-gray-800'}`}>
-                    {isRating ? (
-                        <span className="flex items-center">
-                            {value}
-                            <span className="text-yellow-400 ml-1">★</span>
-                        </span>
-                    ) : (
-                        value
-                    )}
-                </h3>
+const DashboardOverview = ({ products, orders }) => {
+    const totalSpend = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+    return (
+    <div className="space-y-10 animate-in fade-in duration-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatsCard title="Total Spend" value={`₹${totalSpend}`} trend="Realtime" icon={<FaRupeeSign />} color="orange" />
+            <StatsCard title="Active Orders" value={orders.length} trend="Realtime" icon={<FaTruck />} color="blue" />
+            <StatsCard title="Supply Assets" value={products.length} trend="Market Live" icon={<FaBoxOpen />} color="emerald" />
+            <StatsCard title="Network Rating" value="4.9" trend="Excellent" icon={<FaUserCircle />} color="amber" />
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 p-8 shadow-xl">
+                <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-xl font-black text-white  tracking-tighter">Expenditure Flow</h3>
+                    <select className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs font-bold outline-none"><option>Last 6 Months</option></select>
+                </div>
+                <div className="h-80"><Line data={{ labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], datasets: [{ label: 'Spend', data: [15000, 22000, 18000, 25000, 21000, 30000], borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.4 }] }} options={{ maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } } }} /></div>
             </div>
-            <div className={`p-3 rounded-lg ${color}`}>
-                {icon}
+            <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 p-8 shadow-xl">
+                <h3 className="text-xl font-black text-white  tracking-tighter mb-8">Recent Logistics</h3>
+                <div className="space-y-6">
+                    {orders.slice(0, 4).map(o => (
+                        <div key={o._id} className="flex justify-between items-center p-4 bg-slate-900/30 rounded-2xl border border-slate-800/50 group hover:bg-slate-900/50 transition-all cursor-pointer">
+                            <div><p className="font-bold text-white text-sm">{o.items ? `${o.items.length} items` : 'Sourcing Batch'}</p><p className="text-[10px] text-slate-500 font-bold uppercase mt-1">{o.status}</p></div>
+                            <FaChevronRight className="text-slate-600 group-hover:text-orange-500 transition-colors" />
+                        </div>
+                    ))}
+                    <button className="w-full py-4 text-xs font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors border-t border-slate-800 mt-4">View All Shipments</button>
+                </div>
             </div>
         </div>
-        <p className="text-xs text-gray-500 mt-4">{change}</p>
+    </div>
+    );
+};
+
+const ProductListing = ({ products, onAdd }) => (
+    <div className="space-y-8 animate-in slide-in-from-bottom-8 duration-700">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div><h2 className="text-4xl font-black text-white  tracking-tighter">Marketplace</h2><p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Source premium assets from verified suppliers</p></div>
+            <div className="flex gap-4 w-full md:w-auto"><button className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-black uppercase tracking-widest border border-slate-700 flex items-center gap-2"><FaFilter /> Filters</button></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {products.map(p => (
+                <div key={p._id || p.id} className="group bg-[#1e293b]/40 rounded-[2.5rem] p-8 border border-slate-800 hover:border-orange-500/30 transition-all shadow-xl hover:shadow-orange-500/5 relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-[60px] pointer-events-none group-hover:bg-orange-500/10 transition-all"></div>
+                    <div className="flex justify-between items-start mb-10"><div className="w-14 h-14 rounded-2xl bg-slate-900 flex items-center justify-center text-orange-500 text-2xl group-hover:scale-110 transition-transform duration-500 shadow-inner border border-slate-800"><FaBoxOpen /></div><div className="text-right"><span className="text-2xl font-black text-white  tracking-tighter">₹{p.price}</span><p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">per {p.unit || 'kg'}</p></div></div>
+                    <h4 className="text-xl font-black text-white tracking-tight mb-2 group-hover:text-orange-500 transition-colors">{p.name}</h4>
+                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] mb-8">{p.supplier?.name || 'Local Distribution'}</p>
+                    <button onClick={() => { onAdd(p); alert(`${p.name} added to cart!`); }} className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-orange-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"><FaPlus /> Add to Cart</button>
+                </div>
+            ))}
+        </div>
     </div>
 );
 
-const InventoryAlertItem = ({ name, stock, unit, critical }) => (
-    <div className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:shadow-sm transition">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${critical ? 'bg-red-100 text-red-600' : 'bg-yellow-100 text-yellow-600'
-            }`}>
-            <FaBox />
+const CartPage = ({ cart, updateQty, onRemove, total, onCheckout, address, setAddress }) => (
+    <div className="max-w-6xl mx-auto animate-in fade-in duration-700">
+        <h2 className="text-4xl font-black text-white  tracking-tighter mb-10">Sourcing Cart</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="lg:col-span-2 space-y-6">
+                {cart.length === 0 ? (
+                    <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 p-20 text-center flex flex-col items-center opacity-40"><FaShoppingCart size={64} className="mb-6" /><p className="font-bold text-xl uppercase tracking-widest">Cart is empty</p></div>
+                ) : (
+                    cart.map(item => (
+                        <div key={item._id} className="flex flex-col sm:flex-row justify-between items-center p-8 bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 group transition-all hover:bg-[#1e293b]/60 shadow-xl">
+                            <div className="flex items-center gap-6 mb-4 sm:mb-0"><div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center text-orange-500 text-2xl border border-slate-800"><FaBoxOpen /></div><div><h4 className="font-black text-white text-xl tracking-tight">{item.name}</h4><p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{item.supplier?.name || 'Authorized Hub'}</p></div></div>
+                            <div className="flex items-center gap-8">
+                                <div className="flex items-center gap-4 bg-slate-900 rounded-xl p-2 border border-slate-800"><button onClick={() => updateQty(item._id, -1)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white transition-colors"><FaMinus size={12} /></button><div className="flex flex-col items-center justify-center w-12"><span className="text-center font-black text-orange-500 leading-none">{item.qty}</span><span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-1">{item.unit || 'kg'}</span></div><button onClick={() => updateQty(item._id, 1)} className="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-white transition-colors"><FaPlus size={12} /></button></div>
+                                <div className="text-right w-24"><p className="font-black text-white text-xl">₹{item.price * item.qty}</p></div>
+                                <button onClick={() => onRemove(item._id)} className="p-3 text-slate-600 hover:text-rose-500 transition-all hover:bg-rose-500/10 rounded-xl"><FaTrash /></button>
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+            <div className="bg-[#1e293b] rounded-[2.5rem] border border-slate-800 p-10 h-fit shadow-2xl sticky top-28">
+                <h3 className="text-2xl font-black text-white  mb-10 tracking-tighter">Settlement Summary</h3>
+                
+                <div className="mb-8">
+                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1 mb-3 block">Delivery Address (Verification)</label>
+                    <textarea 
+                        value={address} 
+                        onChange={(e) => setAddress(e.target.value)} 
+                        placeholder="Enter full delivery address for identity verification..." 
+                        className="w-full bg-slate-900/50 border border-slate-800 rounded-xl p-4 text-sm text-white outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/5 transition-all resize-none h-24"
+                    />
+                </div>
+
+                <div className="space-y-6 mb-10 border-b border-slate-800 pb-8">
+                    <div className="flex justify-between text-slate-400 font-bold text-sm"><span>Subtotal</span><span>₹{total}</span></div>
+                    <div className="flex justify-between text-slate-400 font-bold text-sm"><span>Logistics Fee</span><span>₹150</span></div>
+                    <div className="flex justify-between text-orange-500 font-black text-sm uppercase tracking-widest pt-4 border-t border-slate-800"><span>Net Payable</span><span className="text-3xl text-white  tracking-tighter">₹{total + (cart.length > 0 ? 150 : 0)}</span></div>
+                </div>
+                <button onClick={onCheckout} disabled={cart.length === 0 || !address.trim()} className="w-full py-6 bg-gradient-to-r from-orange-500 to-amber-600 disabled:from-slate-700 disabled:to-slate-800 text-white rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl shadow-orange-500/20 transition-all hover:scale-[1.02] active:scale-95 disabled:hover:scale-100 disabled:active:scale-100">Complete Purchase Order</button>
+            </div>
         </div>
-        <div>
-            <h4 className="font-medium text-gray-800">{name}</h4>
-            <p className={`text-sm ${critical ? 'text-red-600' : 'text-yellow-600'}`}>
-                {critical ? 'Low Stock' : 'Moderate Stock'}: {stock} {unit}
-            </p>
-        </div>
-        <button className="ml-auto text-orange-600 hover:text-orange-800">
-            Order
-        </button>
     </div>
 );
+
+const OrdersPage = ({ orders, trackingOrderId, setTrackingOrderId, othersLocations, onDelete }) => {
+    // Get the first location from the othersLocations object for the currently tracked order
+    const locationValues = Object.values(othersLocations);
+    const supplierLocation = locationValues.length > 0 ? locationValues[0] : null;
+
+    return (
+    <div className="animate-in slide-in-from-right-8 duration-700 space-y-10">
+        <div><h2 className="text-4xl font-black text-white  tracking-tighter">Purchase Stream</h2><p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Lifecycle of your active and historical acquisitions</p></div>
+        
+        {trackingOrderId && (
+            <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 p-6 relative overflow-hidden shadow-2xl h-[400px]">
+                <div className="absolute top-10 left-10 z-10 bg-[#0f172a]/95 backdrop-blur-xl border border-slate-800 p-8 rounded-[2rem] shadow-2xl group transition-all hover:scale-105">
+                    <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em] mb-4 text-center">Live Delivery Tracker</p>
+                    <div className="flex items-center gap-6">
+                        <div className="w-16 h-16 bg-orange-600/10 text-orange-500 rounded-2xl flex items-center justify-center text-3xl border border-orange-500/20"><FaMapMarkerAlt /></div>
+                        <div>
+                            <p className="text-lg font-black text-white  tracking-tighter">Supplier En Route</p>
+                            <p className="text-[10px] text-slate-500 font-mono mt-1 font-bold">{supplierLocation ? `${supplierLocation.lat.toFixed(4)}, ${supplierLocation.lng.toFixed(4)}` : 'Waiting for signal...'}</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setTrackingOrderId(null)} className="w-full mt-6 py-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">Close Map</button>
+                </div>
+                <LiveMap center={supplierLocation} markers={supplierLocation ? [{ ...supplierLocation, type: 'delivery', label: 'Supplier Fleet' }] : []} height="100%" zoom={15} />
+            </div>
+        )}
+
+        <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl">
+            <table className="w-full text-left border-collapse">
+                <thead><tr className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] bg-slate-900/50"><th className="p-8">Reference</th><th className="p-8">Timeline</th><th className="p-8">Allocation</th><th className="p-8">Valuation</th><th className="p-8">Logistics Status</th><th className="p-8 text-right">Action</th></tr></thead>
+                <tbody className="divide-y divide-slate-800/50">
+                    {orders.map(o => (
+                        <tr key={o._id} className="group hover:bg-slate-800/20 transition-all">
+                            <td className="p-8 font-mono text-xs text-orange-500 font-black tracking-widest">{o._id.substring(o._id.length - 8)}</td>
+                            <td className="p-8 text-xs text-slate-400 font-bold ">{new Date(o.createdAt).toLocaleDateString()}</td>
+                            <td className="p-8 font-black text-white tracking-tight">{o.items ? `${o.items.length} items` : 'Batch'}</td>
+                            <td className="p-8 font-black text-white  text-lg">₹{o.totalAmount}</td>
+                            <td className="p-8"><span className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 w-fit ${o.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : o.status === 'ongoing' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' : 'bg-amber-500/10 text-amber-500 border border-amber-500/20'}`}>{o.status === 'pending' && <span className="w-1.5 h-1.5 bg-amber-500 rounded-full animate-pulse"></span>}{o.status === 'ongoing' && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></span>}{o.status}</span></td>
+                            <td className="p-8 flex items-center justify-end gap-3">
+                                {o.status === 'ongoing' ? (
+                                    <button onClick={() => setTrackingOrderId(o._id)} disabled={trackingOrderId === o._id} className={`px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all shadow-lg ${trackingOrderId === o._id ? 'bg-blue-600 text-white border-blue-500' : 'bg-blue-600/10 text-blue-500 hover:bg-blue-600 hover:text-white border border-blue-500/20'}`}>{trackingOrderId === o._id ? 'Tracking Active' : 'Track Order'}</button>
+                                ) : o.status === 'pending' ? (
+                                    <span className={`px-5 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl border ${o.isAddressVerified ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-slate-800 text-slate-500 border-slate-700'}`}>
+                                        {o.isAddressVerified ? 'Address Verified' : 'Awaiting Dispatch'}
+                                    </span>
+                                ) : (
+                                    <span className="px-5 py-2 text-emerald-500 text-[10px] font-black uppercase tracking-widest">Delivered</span>
+                                )}
+                                {(o.status === 'pending' || o.status === 'completed') && (
+                                    <button onClick={() => onDelete(o._id)} className="w-9 h-9 flex items-center justify-center bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl hover:bg-rose-500 hover:text-white transition-all ml-2" title="Delete Order">
+                                        <FaTrash size={12} />
+                                    </button>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    );
+};
+
+const AnalyticsPage = () => (
+    <div className="space-y-10 animate-in fade-in duration-700">
+        <div><h2 className="text-4xl font-black text-white  tracking-tighter">Business Analytics</h2><p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Statistical mapping of your sourcing performance</p></div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="bg-[#1e293b]/40 rounded-[3rem] border border-slate-800 p-10 shadow-2xl">
+                <h3 className="text-xl font-black text-white  tracking-tighter mb-10 text-center">Category Distribution</h3>
+                <div className="h-80 flex items-center justify-center"><Pie data={{ labels: ['Vegetables', 'Dairy', 'Grains', 'Others'], datasets: [{ data: [45, 25, 20, 10], backgroundColor: ['#f97316', '#3b82f6', '#10b981', '#6366f1'], borderWidth: 0, hoverOffset: 20 }] }} options={{ plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { weight: 'bold' }, padding: 20 } } } }} /></div>
+            </div>
+            <div className="bg-[#1e293b]/40 rounded-[3rem] border border-slate-800 p-10 shadow-2xl">
+                <h3 className="text-xl font-black text-white  tracking-tighter mb-10 text-center">Supply Chain Efficiency</h3>
+                <div className="h-80"><Bar data={{ labels: ['W1', 'W2', 'W3', 'W4', 'W5'], datasets: [{ label: 'Efficiency', data: [88, 92, 85, 95, 98], backgroundColor: '#3b82f6', borderRadius: 8 }] }} options={{ maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { min: 80, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } } }} /></div>
+            </div>
+        </div>
+    </div>
+);
+
+const ProfilePage = ({ user }) => (
+    <div className="max-w-4xl mx-auto animate-in slide-in-from-left-8 duration-700">
+        <h2 className="text-4xl font-black text-white  tracking-tighter mb-10">Account configuration</h2>
+        <div className="bg-[#1e293b]/40 rounded-[3rem] border border-slate-800 p-12 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 blur-[100px] pointer-events-none"></div>
+            <div className="flex flex-col md:flex-row items-center gap-12 mb-16 pb-16 border-b border-slate-800/50">
+                <div className="relative group"><div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-5xl font-black text-white shadow-2xl shadow-orange-500/30 group-hover:scale-105 transition-transform duration-500">{user?.name ? user.name[0] : 'V'}</div><div className="absolute -bottom-2 -right-2 w-10 h-10 bg-emerald-500 border-4 border-[#1e293b] rounded-full shadow-lg"></div></div>
+                <div className="text-center md:text-left">
+                    <h3 className="text-3xl font-black text-white tracking-tight">{user?.name || 'Street Vendor'}</h3>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest mt-2">{user?.email || 'vendor@example.com'}</p>
+                    <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-4"><span className="px-6 py-2 bg-orange-500/10 text-orange-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-orange-500/20">Verified Identity</span><span className="px-6 py-2 bg-blue-500/10 text-blue-500 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/20">Premium Tier</span></div>
+                </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Full Legal Name</label><div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl text-white font-bold">{user?.name}</div></div>
+                <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Registered Channel</label><div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl text-white font-bold">{user?.email}</div></div>
+                <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Logistics Hub</label><div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl text-white font-bold">Satara Central Plaza</div></div>
+                <div className="space-y-2"><label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Account Tier</label><div className="bg-slate-900/50 border border-slate-800 p-4 rounded-2xl text-orange-500 font-black">PREMIUM ELITE</div></div>
+            </div>
+            <button className="w-full py-6 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] mt-16 transition-all border border-slate-700 shadow-xl">Edit Configuration</button>
+        </div>
+    </div>
+);
+
+const StatsCard = ({ title, value, trend, icon, color }) => {
+    const colors = {
+        orange: 'from-orange-500 to-amber-600 shadow-orange-500/20 text-orange-500',
+        blue: 'from-blue-500 to-indigo-600 shadow-blue-500/20 text-blue-500',
+        emerald: 'from-emerald-500 to-teal-600 shadow-emerald-500/20 text-emerald-500',
+        amber: 'from-amber-500 to-yellow-600 shadow-amber-500/20 text-amber-500'
+    };
+    return (
+        <div className="bg-[#1e293b]/40 rounded-[2.5rem] p-8 border border-slate-800 flex flex-col justify-between hover:bg-[#1e293b]/60 transition-all shadow-xl group">
+            <div className="flex justify-between items-start mb-6"><div className={`p-4 rounded-2xl bg-slate-900 border border-slate-800 group-hover:scale-110 transition-transform duration-500 ${colors[color].split(' ').pop()}`}>{icon}</div><span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg bg-slate-900/50 ${trend.includes('+') ? 'text-emerald-500' : 'text-slate-500'}`}>{trend}</span></div>
+            <div><p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.2em] mb-1">{title}</p><h3 className="text-3xl font-black text-white  tracking-tighter">{value}</h3></div>
+        </div>
+    );
+};
 
 export default VendorDashboard;

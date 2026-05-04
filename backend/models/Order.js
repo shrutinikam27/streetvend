@@ -27,6 +27,10 @@ const orderSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    supplierId: {
+        type: String,
+        required: false
+    },
     orderDate: {
         type: Date,
         required: true
@@ -39,9 +43,18 @@ const orderSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    address: {
+        type: String,
+        required: false,
+        trim: true
+    },
+    isAddressVerified: {
+        type: Boolean,
+        default: false
+    },
     status: {
         type: String,
-        enum: ['pending', 'processing', 'shipped', 'completed', 'cancelled'],
+        enum: ['pending', 'processing', 'ongoing', 'shipped', 'completed', 'cancelled'],
         default: 'pending'
     },
     items: [orderItemSchema],

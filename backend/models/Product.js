@@ -15,6 +15,11 @@ const productSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    unit: {
+        type: String,
+        default: 'kg',
+        trim: true
+    },
     description: {
         type: String,
         trim: true

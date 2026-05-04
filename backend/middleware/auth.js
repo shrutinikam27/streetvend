@@ -24,4 +24,12 @@ const adminCheck = (req, res, next) => {
     }
 };
 
-module.exports = { auth, adminCheck };
+const supplierCheck = (req, res, next) => {
+    if (req.user && (req.user.userType === 'supplier' || req.user.userType === 'admin')) {
+        next();
+    } else {
+        res.status(403).json({ message: 'Access denied. Supplier or Admin only.' });
+    }
+};
+
+module.exports = { auth, adminCheck, supplierCheck };

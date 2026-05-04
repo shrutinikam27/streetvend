@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
-const { auth, adminCheck } = require('../middleware/auth');
+const { auth, adminCheck, supplierCheck } = require('../middleware/auth');
 
 // @route   GET api/products
-// @desc    Get all products
+// @desc    Get all products (optionally filtered by supplierId)
 // @access  Public
 router.get('/', async (req, res) => {
     try {
-        const products = await Product.find().populate('supplier', 'name email');
+        const { supplierId } = req.query;
+        let query = {};
+        if (supplierId) {
+            query.supplier = supplierId;
+        }
+        const products = await Product.find(query).populate('supplier', 'name email');
         res.json(products);
     } catch (err) {
         console.error(err.message);
@@ -17,18 +22,19 @@ router.get('/', async (req, res) => {
 });
 
 // @route   POST api/products
-// @desc    Create a product (Admin only)
-// @access  Private/Admin
-router.post('/', [auth, adminCheck], async (req, res) => {
+// @desc    Create a product (Supplier or Admin)
+// @access  Private
+router.post('/', [auth, supplierCheck], async (req, res) => {
     try {
-        const { name, category, price, description, supplierId } = req.body;
+        const { name, category, price, unit, description } = req.body;
 
         const newProduct = new Product({
             name,
             category,
             price,
+            unit: unit || 'kg',
             description,
-            supplier: supplierId
+            supplier: req.user.userId // Use authenticated user ID
         });
 
         const product = await newProduct.save();

@@ -3,10 +3,15 @@ const Order = require('../models/Order');
 
 const router = express.Router();
 
-// Get all orders
+// Get all orders (optionally filtered by vendor or supplierId)
 router.get('/', async (req, res) => {
     try {
-        const orders = await Order.find().sort({ createdAt: -1 });
+        const { vendor, supplierId } = req.query;
+        let query = {};
+        if (vendor) query.vendor = vendor;
+        if (supplierId) query.supplierId = supplierId;
+        
+        const orders = await Order.find(query).sort({ createdAt: -1 });
         res.json({ orders });
     } catch (error) {
         console.error(error);
@@ -17,13 +22,15 @@ router.get('/', async (req, res) => {
 // Create new order
 router.post('/', async (req, res) => {
     try {
-        const { vendor, orderDate, deliveryDate, notes, status, items, totalAmount } = req.body;
+        const { vendor, supplierId, orderDate, deliveryDate, notes, address, status, items, totalAmount } = req.body;
 
         const order = new Order({
             vendor,
+            supplierId,
             orderDate,
             deliveryDate,
             notes,
+            address,
             status,
             items,
             totalAmount
@@ -54,10 +61,15 @@ router.get('/:id', async (req, res) => {
 // Update order status
 router.put('/:id', async (req, res) => {
     try {
-        const { status } = req.body;
+        const { status, isAddressVerified } = req.body;
+        
+        const updateFields = {};
+        if (status) updateFields.status = status;
+        if (isAddressVerified !== undefined) updateFields.isAddressVerified = isAddressVerified;
+
         const order = await Order.findByIdAndUpdate(
             req.params.id,
-            { status },
+            updateFields,
             { new: true }
         );
         if (!order) {

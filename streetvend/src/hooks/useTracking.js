@@ -38,13 +38,49 @@ export const useTracking = (orderId, isSupplier = false) => {
             }
             if (watchIdRef.current) {
                 navigator.geolocation.clearWatch(watchIdRef.current);
+                clearInterval(watchIdRef.current);
             }
         };
     }, [orderId]);
 
     // Function for suppliers to start broadcasting their location
     const startTracking = (supplierId) => {
-        if (!isSupplier || !navigator.geolocation) return;
+        if (!isSupplier) return;
+
+        // Fallback: Mock GPS Movement Simulation for demonstration
+        const mockMovement = () => {
+            let lat = 17.6844;
+            let lng = 73.9895;
+            
+            // Set initial location immediately
+            const initialLocation = { lat, lng };
+            setLocation(initialLocation);
+            if (socketRef.current && orderId) {
+                socketRef.current.emit('update-location', { orderId, supplierId, location: initialLocation });
+            }
+
+            watchIdRef.current = setInterval(() => {
+                // Simulate slight movement
+                lat += (Math.random() - 0.5) * 0.001;
+                lng += (Math.random() - 0.5) * 0.001;
+                const newLocation = { lat, lng };
+                
+                setLocation(newLocation);
+                if (socketRef.current && orderId) {
+                    socketRef.current.emit('update-location', {
+                        orderId,
+                        supplierId,
+                        location: newLocation
+                    });
+                }
+            }, 3000);
+        };
+
+        if (!navigator.geolocation) {
+            console.log('Geolocation not supported, using mock GPS.');
+            mockMovement();
+            return;
+        }
 
         watchIdRef.current = navigator.geolocation.watchPosition(
             (position) => {
@@ -64,7 +100,8 @@ export const useTracking = (orderId, isSupplier = false) => {
                 }
             },
             (error) => {
-                console.error('Error getting location:', error);
+                console.error('Error getting real location, falling back to mock GPS:', error);
+                mockMovement(); // Fallback to mock GPS if real GPS fails
             },
             {
                 enableHighAccuracy: true,
@@ -77,6 +114,7 @@ export const useTracking = (orderId, isSupplier = false) => {
     const stopTracking = () => {
         if (watchIdRef.current) {
             navigator.geolocation.clearWatch(watchIdRef.current);
+            clearInterval(watchIdRef.current);
             watchIdRef.current = null;
         }
     };
