@@ -140,8 +140,8 @@ const SupplierDashboard = () => {
 
     return (
         <div className="flex h-screen bg-[#0f172a] text-slate-200 overflow-hidden font-sans">
-            {/* Sidebar */}
-            <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} bg-[#111827] border-r border-slate-800 transition-all duration-300 flex flex-col z-50 shadow-2xl`}>
+            {/* Sidebar - hidden on mobile */}
+            <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} hidden md:flex bg-[#111827] border-r border-slate-800 transition-all duration-300 flex-col z-50 shadow-2xl`}>
                 <div className="p-6 flex items-center gap-4 border-b border-slate-800 h-20 bg-slate-900/50">
                     <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20">
                         <FaTruck className="text-white text-xl" />
@@ -168,30 +168,28 @@ const SupplierDashboard = () => {
 
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden">
-                <header className="h-20 bg-[#1e293b]/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-8 z-40">
-                    <div className="flex items-center gap-4">
-                        <h2 className="text-xl font-black text-white capitalize tracking-tighter">{activeTab.replace('-', ' ')}</h2>
+                <header className="h-16 md:h-20 bg-[#1e293b]/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-4 md:px-8 z-40">
+                    <div className="flex items-center gap-3">
+                        <h2 className="text-base md:text-xl font-black text-white capitalize tracking-tighter">{activeTab.replace('-', ' ')}</h2>
                     </div>
 
-                    <div className="flex items-center gap-6">
-                        <div className="relative p-2.5 text-slate-400 hover:text-blue-500 transition-all bg-slate-800/50 rounded-xl cursor-pointer">
-                            <FaBell size={18} />
-                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse ring-2 ring-slate-900"></span>
+                    <div className="flex items-center gap-3">
+                        <div className="relative p-2 text-slate-400 hover:text-blue-500 transition-all bg-slate-800/50 rounded-xl cursor-pointer">
+                            <FaBell size={16} />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse ring-2 ring-slate-900"></span>
                         </div>
-                        <div className="h-8 w-px bg-slate-800"></div>
-                        <div className="flex items-center gap-3 bg-slate-800/30 p-1.5 pr-4 rounded-xl border border-slate-800/50">
-                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center font-black text-white shadow-lg shadow-blue-500/10">
+                        <div className="flex items-center gap-2 bg-slate-800/30 p-1 pr-3 rounded-xl border border-slate-800/50">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center font-black text-white text-sm shadow-lg shadow-blue-500/10">
                                 {user?.name ? user.name[0] : 'S'}
                             </div>
                             <div className="hidden sm:block">
                                 <p className="text-xs font-black text-white leading-none">{user?.name || 'Supplier'}</p>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Verified Hub</p>
                             </div>
                         </div>
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-8 bg-[#0f172a] custom-scrollbar">
+                <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8 bg-[#0f172a] custom-scrollbar">
                     {activeTab === 'dashboard' && <SupplierOverview stats={stats} orders={orders} />}
                     {activeTab === 'catalog' && <CatalogTab products={products} onAdd={() => setAddProductModal(true)} />}
                     {activeTab === 'orders' && <OrdersTab orders={orders} onStatusChange={handleOrderStatus} onDelete={handleDeleteOrder} onVerifyAddress={handleVerifyAddress} />}
@@ -200,6 +198,27 @@ const SupplierDashboard = () => {
                     {activeTab === 'profile' && <ProfileTab user={user} />}
                 </main>
             </div>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#111827] border-t border-slate-800 flex md:hidden">
+                {[
+                    { icon: <FaBox />, label: 'Catalog', tab: 'catalog' },
+                    { icon: <FaClipboardList />, label: 'Orders', tab: 'orders', badge: stats.pendingOrders },
+                    { icon: <FaTruck />, label: 'Logistics', tab: 'logistics' },
+                    { icon: <FaChartBar />, label: 'Stats', tab: 'analytics' },
+                    { icon: <FaUserCircle />, label: 'Profile', tab: 'profile' },
+                ].map(item => (
+                    <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`flex-1 flex flex-col items-center py-3 gap-1 relative transition-colors ${activeTab === item.tab ? 'text-blue-500' : 'text-slate-500'}`}>
+                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
+                        {item.badge > 0 && <span className="absolute top-2 right-1/4 w-4 h-4 bg-blue-500 text-white rounded-full text-[8px] font-black flex items-center justify-center">{item.badge}</span>}
+                    </button>
+                ))}
+                <button onClick={logout} className="flex-1 flex flex-col items-center py-3 gap-1 text-slate-500">
+                    <span className="text-lg"><FaSignOutAlt /></span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Logout</span>
+                </button>
+            </nav>
 
             {addProductModal && <AddProductModal onClose={() => setAddProductModal(false)} onSave={handleAddProduct} />}
         </div>
@@ -269,8 +288,9 @@ const CatalogTab = ({ products, onAdd }) => (
 const OrdersTab = ({ orders, onStatusChange, onDelete, onVerifyAddress }) => (
     <div className="animate-in slide-in-from-right-8 duration-700 space-y-10">
         <div><h2 className="text-4xl font-black text-white  tracking-tighter">Purchase Stream</h2><p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Vendor resource requests awaiting fulfillment</p></div>
-        <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl">
-            <table className="w-full text-left border-collapse">
+        <div className="bg-[#1e293b]/40 rounded-2xl md:rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[750px]">
                 <thead><tr className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] bg-slate-900/50"><th className="p-8">Batch ID</th><th className="p-8">Vendor Partner</th><th className="p-8">Delivery Address</th><th className="p-8">Resources</th><th className="p-8">Valuation</th><th className="p-8">Logistics Status</th><th className="p-8 text-right">Action</th></tr></thead>
                 <tbody className="divide-y divide-slate-800/50">
                     {orders.map(o => (
@@ -306,6 +326,7 @@ const OrdersTab = ({ orders, onStatusChange, onDelete, onVerifyAddress }) => (
                     ))}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 );

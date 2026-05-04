@@ -128,8 +128,8 @@ const VendorDashboard = () => {
 
     return (
         <div className="flex h-screen bg-[#0f172a] text-slate-200 overflow-hidden font-sans">
-            {/* Sidebar */}
-            <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} bg-[#1e293b] border-r border-slate-800 transition-all duration-300 flex flex-col z-50`}>
+            {/* Sidebar - hidden on mobile */}
+            <aside className={`${sidebarOpen ? 'w-72' : 'w-20'} hidden md:flex bg-[#1e293b] border-r border-slate-800 transition-all duration-300 flex-col z-50`}>
                 <div className="p-6 flex items-center gap-4 border-b border-slate-800 h-20">
                     <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20">
                         <FaShoppingCart className="text-white text-xl" />
@@ -156,37 +156,35 @@ const VendorDashboard = () => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Top Navbar */}
-                <header className="h-20 bg-[#1e293b]/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-8 z-40">
-                    <div className="flex items-center gap-4 flex-1">
-                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800/50 rounded-lg lg:block hidden">
+                <header className="h-16 md:h-20 bg-[#1e293b]/50 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-4 md:px-8 z-40">
+                    <div className="flex items-center gap-3 flex-1">
+                        <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 text-slate-400 hover:text-white transition-colors bg-slate-800/50 rounded-lg hidden md:block">
                             <FaBars className={sidebarOpen ? 'rotate-90' : ''} />
                         </button>
+                        <h1 className="font-black text-base text-white md:hidden">StreetVend</h1>
                         <div className="relative max-w-md w-full hidden md:block">
                             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
-                            <input type="text" placeholder="Search resources, suppliers, batches..." className="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-2.5 pl-12 pr-4 outline-none focus:border-orange-500/50 focus:ring-4 focus:ring-orange-500/5 transition-all text-sm" />
+                            <input type="text" placeholder="Search resources, suppliers, batches..." className="w-full bg-slate-900/50 border border-slate-800 rounded-xl py-2.5 pl-12 pr-4 outline-none focus:border-orange-500/50 transition-all text-sm" />
                         </div>
                     </div>
-
-                    <div className="flex items-center gap-6">
-                        <div className="relative p-2.5 text-slate-400 hover:text-orange-500 transition-all bg-slate-800/50 rounded-xl cursor-pointer">
-                            <FaBell size={18} />
-                            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse ring-2 ring-slate-900"></span>
+                    <div className="flex items-center gap-3">
+                        <div className="relative p-2 text-slate-400 hover:text-orange-500 transition-all bg-slate-800/50 rounded-xl cursor-pointer">
+                            <FaBell size={16} />
+                            <span className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full animate-pulse ring-2 ring-slate-900"></span>
                         </div>
-                        <div className="h-8 w-px bg-slate-800"></div>
-                        <div className="flex items-center gap-3 bg-slate-800/30 p-1.5 pr-4 rounded-xl border border-slate-800/50">
-                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center font-black text-white shadow-lg shadow-orange-500/10">
+                        <div className="flex items-center gap-2 bg-slate-800/30 p-1 pr-3 rounded-xl border border-slate-800/50">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center font-black text-white text-sm">
                                 {user?.name ? user.name[0] : 'V'}
                             </div>
                             <div className="hidden sm:block">
                                 <p className="text-xs font-black text-white leading-none">{user?.name || 'Vendor'}</p>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Verified Partner</p>
                             </div>
                         </div>
                     </div>
                 </header>
 
                 {/* Dashboard Content */}
-                <main className="flex-1 overflow-y-auto p-8 bg-[#0f172a] custom-scrollbar">
+                <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8 bg-[#0f172a] custom-scrollbar">
                     {activeTab === 'dashboard' && <DashboardOverview products={products} orders={orders} />}
                     {activeTab === 'products' && <ProductListing products={products} onAdd={addToCart} />}
                     {activeTab === 'cart' && <CartPage cart={cart} updateQty={updateQty} onRemove={removeFromCart} total={cartTotal} onCheckout={handleCheckout} address={deliveryAddress} setAddress={setDeliveryAddress} />}
@@ -195,6 +193,27 @@ const VendorDashboard = () => {
                     {activeTab === 'profile' && <ProfilePage user={user} />}
                 </main>
             </div>
+
+            {/* Mobile Bottom Navigation */}
+            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#1e293b] border-t border-slate-800 flex md:hidden">
+                {[
+                    { icon: <FaSearch />, label: 'Shop', tab: 'products' },
+                    { icon: <FaShoppingCart />, label: 'Cart', tab: 'cart', badge: cart.length },
+                    { icon: <FaBoxOpen />, label: 'Orders', tab: 'orders' },
+                    { icon: <FaChartBar />, label: 'Stats', tab: 'analytics' },
+                    { icon: <FaUserCircle />, label: 'Profile', tab: 'profile' },
+                ].map(item => (
+                    <button key={item.tab} onClick={() => setActiveTab(item.tab)} className={`flex-1 flex flex-col items-center py-3 gap-1 relative transition-colors ${activeTab === item.tab ? 'text-orange-500' : 'text-slate-500'}`}>
+                        <span className="text-lg">{item.icon}</span>
+                        <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
+                        {item.badge > 0 && <span className="absolute top-2 right-1/4 w-4 h-4 bg-orange-500 text-white rounded-full text-[8px] font-black flex items-center justify-center">{item.badge}</span>}
+                    </button>
+                ))}
+                <button onClick={logout} className="flex-1 flex flex-col items-center py-3 gap-1 text-slate-500">
+                    <span className="text-lg"><FaSignOutAlt /></span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Logout</span>
+                </button>
+            </nav>
         </div>
     );
 };
@@ -268,8 +287,8 @@ const ProductListing = ({ products, onAdd }) => (
 
 const CartPage = ({ cart, updateQty, onRemove, total, onCheckout, address, setAddress }) => (
     <div className="max-w-6xl mx-auto animate-in fade-in duration-700">
-        <h2 className="text-4xl font-black text-white  tracking-tighter mb-10">Sourcing Cart</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter mb-6 md:mb-10">Sourcing Cart</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10">
             <div className="lg:col-span-2 space-y-6">
                 {cart.length === 0 ? (
                     <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 p-20 text-center flex flex-col items-center opacity-40"><FaShoppingCart size={64} className="mb-6" /><p className="font-bold text-xl uppercase tracking-widest">Cart is empty</p></div>
@@ -317,27 +336,28 @@ const OrdersPage = ({ orders, trackingOrderId, setTrackingOrderId, othersLocatio
 
     return (
     <div className="animate-in slide-in-from-right-8 duration-700 space-y-10">
-        <div><h2 className="text-4xl font-black text-white  tracking-tighter">Purchase Stream</h2><p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Lifecycle of your active and historical acquisitions</p></div>
+        <div><h2 className="text-2xl md:text-4xl font-black text-white tracking-tighter">Purchase Stream</h2><p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mt-1">Lifecycle of your active and historical acquisitions</p></div>
         
         {trackingOrderId && (
-            <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 p-6 relative overflow-hidden shadow-2xl h-[400px]">
-                <div className="absolute top-10 left-10 z-10 bg-[#0f172a]/95 backdrop-blur-xl border border-slate-800 p-8 rounded-[2rem] shadow-2xl group transition-all hover:scale-105">
-                    <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em] mb-4 text-center">Live Delivery Tracker</p>
-                    <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 bg-orange-600/10 text-orange-500 rounded-2xl flex items-center justify-center text-3xl border border-orange-500/20"><FaMapMarkerAlt /></div>
+            <div className="bg-[#1e293b]/40 rounded-2xl md:rounded-[2.5rem] border border-slate-800 p-4 md:p-6 relative overflow-hidden shadow-2xl h-[320px] md:h-[400px]">
+                <div className="absolute top-4 left-4 md:top-10 md:left-10 z-10 bg-[#0f172a]/95 backdrop-blur-xl border border-slate-800 p-4 md:p-8 rounded-xl md:rounded-[2rem] shadow-2xl">
+                    <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.3em] mb-3 text-center">Live Delivery Tracker</p>
+                    <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 md:w-16 md:h-16 bg-orange-600/10 text-orange-500 rounded-xl md:rounded-2xl flex items-center justify-center text-xl md:text-3xl border border-orange-500/20"><FaMapMarkerAlt /></div>
                         <div>
-                            <p className="text-lg font-black text-white  tracking-tighter">Supplier En Route</p>
+                            <p className="text-sm md:text-lg font-black text-white tracking-tighter">Supplier En Route</p>
                             <p className="text-[10px] text-slate-500 font-mono mt-1 font-bold">{supplierLocation ? `${supplierLocation.lat.toFixed(4)}, ${supplierLocation.lng.toFixed(4)}` : 'Waiting for signal...'}</p>
                         </div>
                     </div>
-                    <button onClick={() => setTrackingOrderId(null)} className="w-full mt-6 py-3 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">Close Map</button>
+                    <button onClick={() => setTrackingOrderId(null)} className="w-full mt-4 py-2 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all">Close Map</button>
                 </div>
                 <LiveMap center={supplierLocation} markers={supplierLocation ? [{ ...supplierLocation, type: 'delivery', label: 'Supplier Fleet' }] : []} height="100%" zoom={15} />
             </div>
         )}
 
-        <div className="bg-[#1e293b]/40 rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl">
-            <table className="w-full text-left border-collapse">
+        <div className="bg-[#1e293b]/40 rounded-2xl md:rounded-[2.5rem] border border-slate-800 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse min-w-[700px]">
                 <thead><tr className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] bg-slate-900/50"><th className="p-8">Reference</th><th className="p-8">Timeline</th><th className="p-8">Allocation</th><th className="p-8">Valuation</th><th className="p-8">Logistics Status</th><th className="p-8 text-right">Action</th></tr></thead>
                 <tbody className="divide-y divide-slate-800/50">
                     {orders.map(o => (
@@ -367,6 +387,7 @@ const OrdersPage = ({ orders, trackingOrderId, setTrackingOrderId, othersLocatio
                     ))}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
     );
